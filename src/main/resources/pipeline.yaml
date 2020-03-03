@@ -1,0 +1,14 @@
+
+# Pipeline structure and nodes description
+
+- id: "source"
+  from: "none"
+  to: "sink"
+
+- id: "map"
+  from: "source"
+  to: "sink"
+
+- id: "sink"
+  from: "source"
+  to: "none"
