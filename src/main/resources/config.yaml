@@ -1,5 +1,5 @@
 
 # Global parameters
 
-- tasks_num: 1
-- parallelism: 1
+- tasks_num: 2
+- parallelism: 2
