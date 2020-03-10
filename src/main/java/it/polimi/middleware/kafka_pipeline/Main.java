@@ -9,6 +9,7 @@ import it.polimi.middleware.kafka_pipeline.processors.sinks.MockSink;
 import it.polimi.middleware.kafka_pipeline.processors.sources.MockSource;
 import it.polimi.middleware.kafka_pipeline.threads.ThreadsExecutor;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
@@ -24,13 +25,12 @@ public class Main {
         Config config = new Config();
 
         // Parse global configurations
-        ArrayList<Map<String, Integer>> yaml_config = parser.parseYaml("config.yaml");
-        Config.TASKS_NUM = yaml_config.get(0).get("tasks_num");
-        Config.PARALLELISM = yaml_config.get(1).get("parallelism");
-        System.out.println("\nTasks num: " + Config.TASKS_NUM + " - Parallelism: " + Config.PARALLELISM + "\n");
+        parser.parseConfig();
+        System.out.println("\nServer port: " + Config.SERVER_PORT);
+        System.out.println("Tasks num: " + Config.TASKS_NUM + " - Parallelism: " + Config.PARALLELISM + "\n");
 
         // Parse pipeline structure and nodes
-        ArrayList<Map<String, String>> yaml_objs = parser.parseYaml("pipeline.yaml");
+        ArrayList<Map<String, String>> yaml_objs = parser.parseYaml(Config.PIPELINE_FILE);
         //System.out.println(yaml_objs);
 
         // Map containing all the nodes (keys are IDs)
@@ -38,7 +38,7 @@ public class Main {
 
         // Define properties for consumers and producers
         final Properties producerProps = new Properties();
-        producerProps.put("bootstrap.servers", "localhost:9092");
+        producerProps.put("bootstrap.servers", "localhost:"+Config.SERVER_PORT);
         producerProps.put("group.id", "group");
         producerProps.put("key.serializer", StringSerializer.class.getName());
         producerProps.put("value.serializer", StringSerializer.class.getName());
@@ -46,7 +46,7 @@ public class Main {
         producerProps.put("value.deserializer", StringDeserializer.class.getName());
         //producerProps.put("transactional.id", "transaction_id");
         final Properties consumerProps = new Properties();
-        consumerProps.put("bootstrap.servers", "localhost:9092");
+        consumerProps.put("bootstrap.servers", "localhost:"+Config.SERVER_PORT);
         consumerProps.put("group.id", "group");
         consumerProps.put("key.deserializer", StringDeserializer.class.getName());
         consumerProps.put("value.deserializer", StringDeserializer.class.getName());
@@ -67,6 +67,7 @@ public class Main {
         }
 
         TopicsManager topicsManager = new TopicsManager();
+        TopicsManager.createTopics(Arrays.asList(new NewTopic("test_topic", (short)1, (short)1)));
 
         // Create pipeline and tasks
         Pipeline pipeline = new Pipeline(processorsMap);

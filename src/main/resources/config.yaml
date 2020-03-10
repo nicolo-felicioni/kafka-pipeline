@@ -1,5 +1,7 @@
 
 # Global parameters
 
+- server_port: 9092
+
 - tasks_num: 2
 - parallelism: 2
