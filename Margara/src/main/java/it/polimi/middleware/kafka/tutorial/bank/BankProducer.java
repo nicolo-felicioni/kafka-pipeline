@@ -22,7 +22,7 @@ public class BankProducer {
 		final int maxAmount = 100;
 
 		final Properties props = new Properties();
-		props.put("bootstrap.servers", "localhost:32789");
+		props.put("bootstrap.servers", "192.168.1.8:32786");
 		props.put("key.serializer", StringSerializer.class.getName());
 		props.put("value.serializer", StringSerializer.class.getName());
 

@@ -28,7 +28,7 @@ public class BankConsumer {
 		final int numConsumers = 5;
 
 		final Properties props = new Properties();
-		props.put("bootstrap.servers", "localhost:32789");
+		props.put("bootstrap.servers", "192.168.1.8:32786");
 		props.put("group.id", group);
 		props.put("key.deserializer", StringDeserializer.class.getName());
 		props.put("value.deserializer", StringDeserializer.class.getName());
