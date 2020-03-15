@@ -17,18 +17,37 @@ public class TopicsManager {
 
     private static AdminClient admin;
 
-    public TopicsManager() {
+    private static TopicsManager topicsManagerInstance = null;
+
+    /**
+     * Private constructor.
+     * It is private since the class is a singleton.
+     */
+    private TopicsManager() {
         Properties props = new Properties();
         props.put("bootstrap.servers", "localhost:9092");
         // add something to properties
         admin = KafkaAdminClient.create(props);
     }
 
+
+    /**
+     * TopicsManager getter. The TopicsManager is a singleton.
+     * @return an instance of the TopicsManager.
+     */
+    public static TopicsManager getInstance(){
+        if (topicsManagerInstance == null){
+            topicsManagerInstance = new TopicsManager();
+        }
+        return topicsManagerInstance;
+    }
+
+    //TODO: why is this function here?
     public static String getTopicName(String s1, String s2) {
         return s1 + "_" + s2;
     }
 
-    public static void createTopics(List<String> newTopics, short numPartitions, short replicationFactor) {
+    public void createTopics(List<String> newTopics, short numPartitions, short replicationFactor) {
         for(String topic : newTopics) {
             try {
                 CreateTopicsResult result = admin.createTopics(Arrays.asList(new NewTopic(topic, numPartitions, replicationFactor)));

@@ -11,6 +11,7 @@ public class Task {
 
     private int id;
     private Pipeline pipeline;
+    private TopicsManager topicsManager = TopicsManager.getInstance();
 
     public Task(int id, Pipeline pipeline) {
         this.id = id;
@@ -34,7 +35,7 @@ public class Task {
             topics.add(processorsMap.get(id).getInputTopic() + "_" + this.id);  // distinguish topics in each
             topics.add(processorsMap.get(id).getOutputTopic() + "_" + this.id); // task by adding the task id
         }
-        TopicsManager.createTopics(topics, numPartitions, replicationFactor);
+        topicsManager.createTopics(topics, numPartitions, replicationFactor);
     }
 
 }

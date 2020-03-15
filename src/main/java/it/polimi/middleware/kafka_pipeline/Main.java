@@ -50,7 +50,7 @@ public class Main {
         // Map containing all the nodes (keys are IDs)
         Pipeline pipeline = parser.parsePipeline(producerProps, consumerProps);
 
-        TopicsManager topicsManager = new TopicsManager();
+        TopicsManager topicsManager = TopicsManager.getInstance();
 
         short topicsNumPartitions = 2;
         short topicsReplicationFactor = 2;
