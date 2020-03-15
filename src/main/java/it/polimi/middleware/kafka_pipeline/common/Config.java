@@ -7,6 +7,8 @@ public class Config {
 
     public static int SERVER_PORT;
 
+    public static String GROUP;
+
     public static int PARALLELISM;
     public static int TASKS_NUM;
 

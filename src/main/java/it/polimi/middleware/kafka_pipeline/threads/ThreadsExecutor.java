@@ -34,7 +34,9 @@ public class ThreadsExecutor {
             List<Task> toBeAssigned = new ArrayList<>();
             PipelineThread currentThread;
             for (int j = i; j < i + tasksPerThread; j++) {
-                toBeAssigned.add(tasks.get(j));
+                Task task = tasks.get(j);
+                System.out.println("Assigning task: " + task.getId());
+                toBeAssigned.add(task);
                 currentThread = new PipelineThread(id, toBeAssigned);
                 threads.add(currentThread);
             }

@@ -26,7 +26,7 @@ public class MockSink extends StreamProcessor {
     }
 
     @Override
-    public ConsumerRecords<String, String> receive() {
+    synchronized public ConsumerRecords<String, String> receive() {
         return consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
     }
 

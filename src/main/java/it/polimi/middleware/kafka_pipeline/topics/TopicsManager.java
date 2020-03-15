@@ -28,11 +28,11 @@ public class TopicsManager {
         return s1 + "_" + s2;
     }
 
-    public static void createTopics(List<NewTopic> newTopics) {
-        for(NewTopic topic : newTopics) {
+    public static void createTopics(List<String> newTopics, short numPartitions, short replicationFactor) {
+        for(String topic : newTopics) {
             try {
-                CreateTopicsResult result = admin.createTopics(Arrays.asList(topic));
-                System.out.println("Created topic " + topic.toString());
+                CreateTopicsResult result = admin.createTopics(Arrays.asList(new NewTopic(topic, numPartitions, replicationFactor)));
+                System.out.println("Created topic " + topic);
             } catch (TopicExistsException e) {
                 // do nothing
             }
