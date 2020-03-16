@@ -7,10 +7,7 @@ import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.errors.TopicExistsException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public class TopicsManager {
@@ -37,7 +34,12 @@ public class TopicsManager {
      */
     public static TopicsManager getInstance(){
         if (topicsManagerInstance == null){
-            topicsManagerInstance = new TopicsManager();
+            //thread safe creation
+            synchronized (TopicsManager.class){
+                if (topicsManagerInstance == null) {
+                    topicsManagerInstance = new TopicsManager();
+                }
+            }
         }
         return topicsManagerInstance;
     }
@@ -50,7 +52,7 @@ public class TopicsManager {
     public void createTopics(List<String> newTopics, short numPartitions, short replicationFactor) {
         for(String topic : newTopics) {
             try {
-                CreateTopicsResult result = admin.createTopics(Arrays.asList(new NewTopic(topic, numPartitions, replicationFactor)));
+                CreateTopicsResult result = admin.createTopics(Collections.singletonList(new NewTopic(topic, numPartitions, replicationFactor)));
                 System.out.println("Created topic " + topic);
             } catch (TopicExistsException e) {
                 // do nothing
