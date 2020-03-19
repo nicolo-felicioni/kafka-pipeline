@@ -1,11 +1,14 @@
 package it.polimi.middleware.kafka_pipeline.processors;
 
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Properties;
 
 public abstract class StreamProcessor {
@@ -30,34 +33,56 @@ public abstract class StreamProcessor {
         this.from = from;
         this.to = to;
 
-        this.inTopic = getInputTopic();
-        this.outTopic = getOutputTopic();
+        this.inTopic = TopicsManager.getInputTopic(from, id);
+        this.outTopic = TopicsManager.getOutputTopic(id, to);
 
         this.producerProps = producerProps;
         this.consumerProps = consumerProps;
+
+        this.consumer = new KafkaConsumer<>(consumerProps);
+        this.producer = new KafkaProducer<>(producerProps);
+
     }
 
     public String getId() {
         return id;
     }
 
-    public String getInputTopic() {
-        return TopicsManager.getTopicName(from, id);
-    }
 
-    public String getOutputTopic() {
-        return TopicsManager.getTopicName(id, to);
-    }
-
-    // implement in subclasses
-    public abstract ConsumerRecords<String, String> receive();
-    public abstract void send(ProducerRecord<String, String> record);
-    public abstract void process();
+    //strategy method
+    public abstract ConsumerRecords<String, String> executeOperation(ConsumerRecords<String, String> records);
 
     public void stop() {
         consumer.close();
         producer.close();
     }
+
+    synchronized public ConsumerRecords<String, String> receive() {
+        return consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
+    }
+
+    public void send(ProducerRecord<String, String> record) {
+        producer.send(record);
+    }
+
+    public void process(){
+        ConsumerRecords<String, String> results;
+
+        //TODO transactions
+        //producer.initTransactions();
+
+        //receive the inputs
+        ConsumerRecords<String, String> records = receive();
+
+        //get the results from the operation
+        results = executeOperation(records);
+
+        //for every result, write it in the outTopic
+        for (final ConsumerRecord<String, String> result_record : results) {
+            send(new ProducerRecord<>(outTopic, result_record.key(), result_record.value()));
+        }
+    }
+
 
     @Override
     public abstract StreamProcessor clone();

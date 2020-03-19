@@ -5,8 +5,6 @@ import it.polimi.middleware.kafka_pipeline.pipeline.Pipeline;
 import it.polimi.middleware.kafka_pipeline.pipeline.Task;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import it.polimi.middleware.kafka_pipeline.parser.Parser;
-import it.polimi.middleware.kafka_pipeline.processors.sinks.MockSink;
-import it.polimi.middleware.kafka_pipeline.processors.sources.MockSource;
 import it.polimi.middleware.kafka_pipeline.threads.ThreadsExecutor;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
 import org.apache.kafka.clients.admin.NewTopic;

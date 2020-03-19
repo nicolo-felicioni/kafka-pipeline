@@ -1,12 +1,12 @@
 
 # Pipeline structure and nodes description
 
-- id: "source"
-  type: "source"
-  from: "none"
-  to: "sink"
+- id: "source_id"
+  type: "forward"
+  from: "begin"
+  to: "sink_id"
 
-- id: "sink"
-  type: "sink"
-  from: "source"
-  to: "none"
+- id: "sink_id"
+  type: "forward"
+  from: "source_id"
+  to: "end"

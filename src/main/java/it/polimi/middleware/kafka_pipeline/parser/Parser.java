@@ -2,9 +2,8 @@ package it.polimi.middleware.kafka_pipeline.parser;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
 import it.polimi.middleware.kafka_pipeline.pipeline.Pipeline;
+import it.polimi.middleware.kafka_pipeline.processors.Forwarder;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
-import it.polimi.middleware.kafka_pipeline.processors.sinks.MockSink;
-import it.polimi.middleware.kafka_pipeline.processors.sources.MockSource;
 import org.yaml.snakeyaml.Yaml;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -42,11 +41,8 @@ public class Parser {
         // create all the StreamProcessors
         StreamProcessor processor = null;
         for (Map<String, String> obj: yaml_objs) {
-            if (obj.get("type").equals("source")) {
-                processor = new MockSource(obj.get("id"), obj.get("type"), obj.get("from"), obj.get("to"), producerProps, consumerProps);
-            }
-            else if (obj.get("type").equals("sink")) {
-                processor = new MockSink(obj.get("id"), obj.get("type"), obj.get("from"), obj.get("to"), producerProps, consumerProps);
+            if (obj.get("type").equals("forward")) {
+                processor = new Forwarder(obj.get("id"), obj.get("type"), obj.get("from"), obj.get("to"), producerProps, consumerProps);
             }
             processorsMap.put(processor.getId(), processor);
             System.out.println(processor);

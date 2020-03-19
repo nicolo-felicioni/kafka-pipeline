@@ -14,6 +14,12 @@ public class TopicsManager {
 
     private static AdminClient admin;
 
+    private static String SOURCE_KEYWORD = "begin";
+    private static String SINK_KEYWORD = "end";
+    private static String SOURCE_TOPIC = "source_topic";
+    private static String SINK_TOPIC = "sink_topic";
+
+
     private static TopicsManager topicsManagerInstance = null;
 
     /**
@@ -45,8 +51,27 @@ public class TopicsManager {
     }
 
     //TODO: why is this function here?
-    public static String getTopicName(String s1, String s2) {
-        return s1 + "_" + s2;
+    private static String getTopicName(String from, String to) {
+        return from + "_" + to;
+    }
+
+    public static String getInputTopic(String from, String id) {
+        if(from.equals(SOURCE_KEYWORD))
+            return SOURCE_TOPIC;
+        else
+            return getTopicName(from, id);
+    }
+
+    public static String getOutputTopic(String id, String to) {
+        if(to.equals(SINK_KEYWORD))
+            return SINK_TOPIC;
+        else
+            return TopicsManager.getTopicName(id, to);
+    }
+
+    public boolean isSource(String processorName){
+        //TODO
+        return false;
     }
 
     public void createTopics(List<String> newTopics, short numPartitions, short replicationFactor) {
