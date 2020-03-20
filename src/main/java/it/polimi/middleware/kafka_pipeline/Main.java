@@ -21,7 +21,6 @@ public class Main {
         Config.printConfiguration();
 
         // Define properties for consumers and producers
-        Utils utils = new Utils();
         Properties producerProps = Utils.getProducerProperties();
         Properties consumerProps = Utils.getConsumerProperties();
 
