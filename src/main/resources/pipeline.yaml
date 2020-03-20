@@ -1,6 +1,9 @@
 
 # Pipeline structure and nodes description
 
+- source_topic: "source_topic"
+- sink_topic: "sink_topic"
+
 - id: "source_id"
   type: "forward"
   from: "begin"

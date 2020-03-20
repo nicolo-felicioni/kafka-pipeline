@@ -9,6 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Properties;
 
 public abstract class StreamProcessor {
@@ -40,6 +41,8 @@ public abstract class StreamProcessor {
         this.consumerProps = consumerProps;
 
         this.consumer = new KafkaConsumer<>(consumerProps);
+        this.consumer.subscribe(Collections.singletonList(this.inTopic));
+
         this.producer = new KafkaProducer<>(producerProps);
 
     }
@@ -48,6 +51,13 @@ public abstract class StreamProcessor {
         return id;
     }
 
+    public String getInputTopic() {
+        return inTopic;
+    }
+
+    public String getOutputTopic() {
+        return outTopic;
+    }
 
     //strategy method
     public abstract ConsumerRecords<String, String> executeOperation(ConsumerRecords<String, String> records);
@@ -62,6 +72,7 @@ public abstract class StreamProcessor {
     }
 
     public void send(ProducerRecord<String, String> record) {
+        System.out.println(this.getId() + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
         producer.send(record);
     }
 
@@ -79,6 +90,7 @@ public abstract class StreamProcessor {
 
         //for every result, write it in the outTopic
         for (final ConsumerRecord<String, String> result_record : results) {
+            System.out.println(this.getId() + " - Consumed: topic:" + result_record.topic() + " - key:" + result_record.key() + " - value:" + result_record.value());
             send(new ProducerRecord<>(outTopic, result_record.key(), result_record.value()));
         }
     }

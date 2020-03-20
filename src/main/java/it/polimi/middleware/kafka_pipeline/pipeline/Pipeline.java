@@ -28,11 +28,11 @@ public class Pipeline {
     }
 
     public Map<String, StreamProcessor> getProcessorsMap() {
-        Map<String, StreamProcessor> newMap = new HashMap<>();
-        for (String id : processorsMap.keySet()) {
-            newMap.put(id, processorsMap.get(id).clone());
-        }
-        return newMap;
+        return this.clone(processorsMap);
+    }
+
+    public Map<String, StreamProcessor> clone(Map<String, StreamProcessor> original) {
+        return new HashMap<>(original);
     }
 
     @Override

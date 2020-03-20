@@ -22,6 +22,12 @@ public class PipelineThread extends Thread {
             for(Task task : tasks) {
                 System.out.println("Thread " + id + " - running task " + task.getId());
                 task.proceed();
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

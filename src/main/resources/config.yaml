@@ -1,9 +1,10 @@
 
 # Global parameters
 
+- server_ip: "localhost"
 - server_port: 9092
 
-- group: "group_1"  # 'compputation' name, to distinguish different computations
+- group: "group_1"  # 'computation' name, to distinguish different computations
 
-- tasks_num: 2
-- parallelism: 2
+- tasks_num: 1
+- parallelism: 1
