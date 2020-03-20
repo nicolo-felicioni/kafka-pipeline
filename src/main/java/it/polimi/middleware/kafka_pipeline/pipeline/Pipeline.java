@@ -1,13 +1,7 @@
 package it.polimi.middleware.kafka_pipeline.pipeline;
 
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
-import it.polimi.middleware.kafka_pipeline.threads.PipelineThread;
-import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.common.protocol.types.Field;
-
 import java.util.*;
-import java.util.concurrent.*;
 
 public class Pipeline {
 

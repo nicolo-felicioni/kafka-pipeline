@@ -1,16 +1,13 @@
 package it.polimi.middleware.kafka_pipeline.topics;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
-import it.polimi.middleware.kafka_pipeline.pipeline.Pipeline;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.errors.TopicExistsException;
-
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 public class TopicsManager {
 
