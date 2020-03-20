@@ -15,6 +15,7 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
 
         Parser parser = new Parser();
+        TopicsManager topicsManager = TopicsManager.getInstance();
 
         // Parse global configurations
         Config config = parser.parseConfig();
@@ -32,10 +33,11 @@ public class Main {
 
         // create source and sink topics
         List<String> globalTopics = parser.parseSourceSinkTopics();
-        TopicsManager.getInstance().setSourceTopic(globalTopics.get(0));
-        TopicsManager.getInstance().setSinkTopic(globalTopics.get(1));
 
-        TopicsManager.getInstance().createPipelineTopics(pipeline.getProcessorsMap(), topicsNumPartitions, topicsReplicationFactor);
+        topicsManager.setSourceTopic(globalTopics.get(0));
+        topicsManager.setSinkTopic(globalTopics.get(1));
+
+        topicsManager.createPipelineTopics(pipeline.getProcessorsMap(), topicsNumPartitions, topicsReplicationFactor);
 
         // create a list of tasks
         List<Task> tasks = new ArrayList<>();
