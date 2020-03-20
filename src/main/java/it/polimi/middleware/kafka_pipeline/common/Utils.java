@@ -8,7 +8,7 @@ import java.util.Properties;
 
 public class Utils {
 
-    public Properties getConsumerProperties() {
+    public static Properties getConsumerProperties() {
         Properties consumerProps = new Properties();
         consumerProps.put("bootstrap.servers", Config.SERVER_IP+":"+Config.SERVER_PORT);
         consumerProps.put("group.id", Config.GROUP);
@@ -18,7 +18,7 @@ public class Utils {
         return consumerProps;
     }
 
-    public Properties getProducerProperties() {
+    public static Properties getProducerProperties() {
         Properties producerProps = new Properties();
         producerProps.put("bootstrap.servers", Config.SERVER_IP+":"+Config.SERVER_PORT);
         producerProps.put("group.id", Config.GROUP);
@@ -28,4 +28,5 @@ public class Utils {
         producerProps.put("value.deserializer", StringDeserializer.class.getName());
         return producerProps;
     }
+
 }

@@ -18,16 +18,12 @@ public class Main {
 
         // Parse global configurations
         Config config = parser.parseConfig();
-        System.out.println("\nServer ip: " + Config.SERVER_IP);
-        System.out.println("Server port: " + Config.SERVER_PORT);
-        System.out.println("Tasks num: " + Config.TASKS_NUM);
-        System.out.println("Parallelism: " + Config.PARALLELISM);
-        System.out.println("Group: " + Config.GROUP + "\n");
+        Config.printConfiguration();
 
         // Define properties for consumers and producers
         Utils utils = new Utils();
-        Properties producerProps = utils.getProducerProperties();
-        Properties consumerProps = utils.getConsumerProperties();
+        Properties producerProps = Utils.getProducerProperties();
+        Properties consumerProps = Utils.getConsumerProperties();
 
         // pipeline containing all the nodes (stream processors)
         Pipeline pipeline = parser.parsePipeline(producerProps, consumerProps);

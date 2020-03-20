@@ -13,4 +13,12 @@ public class Config {
     public static int PARALLELISM;
     public static int TASKS_NUM;
 
+    public static void printConfiguration(){
+        System.out.println("\nServer ip: " + Config.SERVER_IP);
+        System.out.println("Server port: " + Config.SERVER_PORT);
+        System.out.println("Tasks num: " + Config.TASKS_NUM);
+        System.out.println("Parallelism: " + Config.PARALLELISM);
+        System.out.println("Group: " + Config.GROUP + "\n");
+    }
+
 }
