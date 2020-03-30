@@ -9,12 +9,18 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 
+/**
+ * Producer class for debugging purposes.
+ *
+ * It produces random numbers on the "source_topic",
+ * i.e. the input topic to the processing pipeline.
+ */
 public class Producer {
     private static final boolean print = true;
-    private static final int waitBetweenMsgs = 500;
+    private static final int waitBetweenMsgs = 1000;
 
     public static void main(String[] args) {
-        final List<String> topics = Collections.singletonList("topic1");
+        final List<String> topics = Collections.singletonList("source_topic");
         final int numMessages = 100000;
 
         final Properties props = new Properties();

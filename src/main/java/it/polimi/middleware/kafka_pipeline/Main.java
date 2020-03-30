@@ -12,39 +12,40 @@ import java.util.*;
 
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
 
-        Parser parser = new Parser();
+        new Parser();
 
         // Parse global configurations
-        Config config = parser.parseConfig();
+        Config config = Parser.parseConfig();
         Config.printConfiguration();
 
         TopicsManager topicsManager = TopicsManager.getInstance();
-
 
         // Define properties for consumers and producers
         Properties producerProps = Utils.getProducerProperties();
         Properties consumerProps = Utils.getConsumerProperties();
 
         // pipeline containing all the nodes (stream processors)
-        Pipeline pipeline = parser.parsePipeline(producerProps, consumerProps);
+        //Pipeline pipeline = Parser.parsePipeline(producerProps, consumerProps);
 
         short topicsNumPartitions = 1;
         short topicsReplicationFactor = 1;
 
         // create source and sink topics
-        List<String> globalTopics = parser.parseSourceSinkTopics();
+        List<String> globalTopics = Parser.parseSourceSinkTopics();
 
         topicsManager.setSourceTopic(globalTopics.get(0));
         topicsManager.setSinkTopic(globalTopics.get(1));
 
-        topicsManager.createPipelineTopics(pipeline.getProcessorsMap(), topicsNumPartitions, topicsReplicationFactor);
+        // TODO different strategy to parse and create topics
+        topicsManager.createPipelineTopics(Parser.parseProcessorsMap(-1, producerProps, consumerProps),
+                                                                        topicsNumPartitions, topicsReplicationFactor);
 
         // create a list of tasks
         List<Task> tasks = new ArrayList<>();
         for (int i = 0; i < Config.TASKS_NUM; i++) {
-            Task task = new Task(i, pipeline.clone());
+            Task task = new Task(i);
             tasks.add(task);
         }
 

@@ -3,6 +3,11 @@ package it.polimi.middleware.kafka_pipeline.pipeline;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import java.util.*;
 
+/**
+ * This class represents the processing pipeline.
+ *
+ * It contains a map collecting all the StreamProcessors.
+ */
 public class Pipeline {
 
     private Map<String, StreamProcessor> processorsMap;

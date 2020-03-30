@@ -1,29 +1,27 @@
 package it.polimi.middleware.kafka_pipeline.parser;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
-import it.polimi.middleware.kafka_pipeline.pipeline.Pipeline;
 import it.polimi.middleware.kafka_pipeline.processors.Forwarder;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import org.yaml.snakeyaml.Yaml;
 import java.io.InputStream;
 import java.util.*;
 
+/**
+ * Parser for Yaml configuration files
+ */
 public class Parser {
 
-    private Yaml yaml;
+    private static Yaml yaml;
 
     public Parser() {
         yaml = new Yaml();
     }
 
-    public ArrayList parseYaml(String filename) {
-        InputStream inputStream = this.getClass()
-                .getClassLoader()
-                .getResourceAsStream(filename);
-        return yaml.load(inputStream);
-    }
-
-    public Config parseConfig() {
+    /**
+     * @return a Config object containing application configurations
+     */
+    public static Config parseConfig() {
         Config config = new Config();
         ArrayList<Map<String, Integer>> yaml_config = parseYaml(Config.CONFIG_FILE);
         Config.SERVER_IP = String.valueOf(yaml_config.get(0).get("server_ip"));
@@ -34,14 +32,24 @@ public class Parser {
         return config;
     }
 
-    public List<String> parseSourceSinkTopics() {
+    /**
+     * @return list containing 2 elements, that the global topics,
+     *          the input and the output topics from the pipeline point of view
+     */
+    public static List<String> parseSourceSinkTopics() {
         ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
         String sourceTopic = yaml_objs.get(0).get("source_topic");
         String sinkTopic = yaml_objs.get(1).get("sink_topic");
         return new ArrayList<>(Arrays.asList(sourceTopic, sinkTopic));
     }
 
-    public Pipeline parsePipeline(Properties producerProps, Properties consumerProps) {
+    /**
+     * @param taskId
+     * @param producerProps
+     * @param consumerProps
+     * @return a map containing all the stream processors and their IDs
+     */
+    public static Map<String, StreamProcessor> parseProcessorsMap(int taskId, Properties producerProps, Properties consumerProps) {
         // Parse pipeline structure and nodes
         ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
 
@@ -51,12 +59,24 @@ public class Parser {
         for (int i = 2; i < yaml_objs.size(); i++) {
             Map<String, String> obj = yaml_objs.get(i);
             if (obj.get("type").equals("forward")) {
-                processor = new Forwarder(obj.get("id"), obj.get("type"), obj.get("from"), obj.get("to"), producerProps, consumerProps);
+                processor = new Forwarder(taskId, obj.get("id"), obj.get("type"), obj.get("from"), obj.get("to"), producerProps, consumerProps);
             }
             processorsMap.put(processor.getId(), processor);
+            System.out.println("Created processor " + obj.get("id") + " - task: " + taskId);
         }
 
         System.out.println("Processors map: " + processorsMap);
-        return new Pipeline(processorsMap);
+        return processorsMap;
+    }
+
+    /**
+     * @param filename path to the file to be parsed
+     * @return ArrayList containing a Map<String,String> for each parsed object
+     */
+    private static ArrayList parseYaml(String filename) {
+        InputStream inputStream = (Parser.class)
+                .getClassLoader()
+                .getResourceAsStream(filename);
+        return yaml.load(inputStream);
     }
 }

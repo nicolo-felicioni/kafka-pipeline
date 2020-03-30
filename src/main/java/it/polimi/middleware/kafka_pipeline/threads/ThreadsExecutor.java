@@ -10,8 +10,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- *  Maintain a list of all the tasks
- *  and assign them to threads.
+ * Class that manages threads execution.
+ *
+ * It maintains a list of all the tasks
+ * and it assigns them to threads.
  */
 public class ThreadsExecutor {
 
@@ -25,6 +27,9 @@ public class ThreadsExecutor {
         createThreads();
     }
 
+    /**
+     * Create threads, assign them to tasks and start executing them.
+     */
     private void createThreads() {
         int tasksPerThread = Config.TASKS_NUM / Config.PARALLELISM;
         List<PipelineThread> threads = new ArrayList<>();
@@ -49,6 +54,9 @@ public class ThreadsExecutor {
         System.out.println("Threads number: " + threads.size());
     }
 
+    /**
+     * Stop the executor (i.e. stop all the threads)
+     */
     public void shutdown() {
         executor.shutdown();
         try {

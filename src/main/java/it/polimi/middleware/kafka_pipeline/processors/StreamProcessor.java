@@ -13,6 +13,9 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+/**
+ * Superclass describing the pipeline nodes, called StreamProcessors.
+ */
 public abstract class StreamProcessor {
 
     protected String id;
@@ -22,28 +25,30 @@ public abstract class StreamProcessor {
     protected String inTopic;
     protected String outTopic;
 
+    protected int taskId;
+
     protected KafkaProducer<String, String> producer;
     protected KafkaConsumer<String, String> consumer;
 
     protected Properties consumerProps;
     protected Properties producerProps;
 
-    public StreamProcessor(String id, String type, String from, String to,
+    public StreamProcessor(int taskId, String processorId, String type, String from, String to,
                                     Properties producerProps, Properties consumerProps) {
-        this.id = id;
+        this.id = processorId;
         this.type = type;
         this.from = from;
         this.to = to;
 
+        this.taskId = taskId;
 
         this.inTopic = TopicsManager.getInputTopic(from, id);
         this.outTopic = TopicsManager.getOutputTopic(id, to);
 
         this.producerProps = producerProps;
 
-
         //todo temporary solution for transaction_id
-        final String transaction_id = id + "_" + to + "_"; // + task_id
+        final String transaction_id = id + "_" + to + "_" + taskId;
         this.producerProps.put("transactional.id", transaction_id);
 
         this.consumerProps = consumerProps;
@@ -58,7 +63,6 @@ public abstract class StreamProcessor {
          * any other methods when the transactional.id is set in the configuration.
          * */
         producer.initTransactions();
-
     }
 
     public String getId() {
@@ -86,7 +90,7 @@ public abstract class StreamProcessor {
     }
 
     public void send(ProducerRecord<String, String> record) {
-        System.out.println(this.getId() + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
+        System.out.println("Task: " + taskId + " - ID: " + this.getId() + " - Tansaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
         producer.send(record);
     }
 
@@ -101,11 +105,9 @@ public abstract class StreamProcessor {
         //get the results from the operation
         results = executeOperation(records);
 
-
-
         //for every result, write it in the outTopic
         for (final ConsumerRecord<String, String> result_record : results) {
-            System.out.println(this.getId() + " - Consumed: topic:" + result_record.topic() + " - key:" + result_record.key() + " - value:" + result_record.value());
+            System.out.println("Task: " + taskId + " - ID: " + this.getId() + " - Consumed: topic:" + result_record.topic() + " - key:" + result_record.key() + " - value:" + result_record.value());
             send(new ProducerRecord<>(outTopic, result_record.key(), result_record.value()));
         }
 
@@ -113,11 +115,9 @@ public abstract class StreamProcessor {
         // consumer within the transaction
         final Map<TopicPartition, OffsetAndMetadata> map = createPartitionOffsetMap(results);
 
-        producer.sendOffsetsToTransaction(map, this.producerProps.getProperty("group.id"));
+        //producer.sendOffsetsToTransaction(map, this.producerProps.getProperty("group.id"));
         producer.commitTransaction();
-
     }
-
 
     @Override
     public abstract StreamProcessor clone();
