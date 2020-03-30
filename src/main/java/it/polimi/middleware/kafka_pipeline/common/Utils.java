@@ -32,6 +32,7 @@ public class Utils {
         producerProps.put("value.deserializer", StringDeserializer.class.getName());
 
         producerProps.put("acks", "all");
+        producerProps.put("enable.idempotence", true);
 
         return producerProps;
     }
