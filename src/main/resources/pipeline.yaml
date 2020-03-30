@@ -6,10 +6,10 @@
 
 - id: "source_id"
   type: "forward"
-  from: "begin"
+  from: "source"
   to: "sink_id"
 
 - id: "sink_id"
   type: "forward"
   from: "source_id"
-  to: "end"
+  to: "sink"

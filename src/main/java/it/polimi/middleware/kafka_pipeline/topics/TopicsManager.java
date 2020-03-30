@@ -13,8 +13,8 @@ public class TopicsManager {
 
     private static AdminClient admin;
 
-    private static String SOURCE_KEYWORD = "begin";
-    private static String SINK_KEYWORD = "end";
+    private static final String SOURCE_KEYWORD = "source";
+    private static final String SINK_KEYWORD = "sink";
     private static String SOURCE_TOPIC = "source_topic";
     private static String SINK_TOPIC = "sink_topic";
 
@@ -27,6 +27,7 @@ public class TopicsManager {
      */
     private TopicsManager() {
         Properties props = new Properties();
+        System.out.println(Config.SERVER_IP+":"+Config.SERVER_PORT);
         props.put("bootstrap.servers", Config.SERVER_IP+":"+Config.SERVER_PORT);
         // add something to properties
         admin = KafkaAdminClient.create(props);
@@ -49,7 +50,6 @@ public class TopicsManager {
         return topicsManagerInstance;
     }
 
-    //TODO: why is this function here?
     private static String getTopicName(String from, String to) {
         return from + "_" + to;
     }
@@ -69,7 +69,7 @@ public class TopicsManager {
     }
 
     public boolean isSource(String processorName){
-        //TODO
+        //TODO maybe this method is useless
         return false;
     }
 
@@ -116,5 +116,10 @@ public class TopicsManager {
             topics.add(processorsMap.get(id).getOutputTopic());
         }
         createTopics(topics, numPartitions, replicationFactor);
+    }
+
+    //TODO temporary, for debug
+    public String getSourceTopic(){
+        return SOURCE_TOPIC;
     }
 }

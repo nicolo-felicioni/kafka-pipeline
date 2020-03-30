@@ -14,7 +14,26 @@ public class Producer {
 	private static final int waitBetweenMsgs = 500;
 
 	public static void main(String[] args) {
-		final List<String> topics = Collections.singletonList("topic1");
+
+		// if you want to test our pipeline, set this to true.
+		// if you want to test AtomicForwarder example from the lecture, set this to false.
+		boolean test_pipeline = true;
+
+		String inputTopic;
+		if(test_pipeline){
+			Parser parser = new Parser();
+
+			// Parse global configurations
+			Config config = parser.parseConfig();
+			Config.printConfiguration();
+
+			TopicsManager topicsManager = TopicsManager.getInstance();
+			inputTopic = topicsManager.getSourceTopic();
+		} else{
+			inputTopic = "topic1";
+		}
+
+		final List<String> topics = Collections.singletonList(inputTopic);
 		final int numMessages = 100000;
 
 		final Properties props = new Properties();

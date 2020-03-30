@@ -15,6 +15,10 @@ public class Utils {
         consumerProps.put("partition.assignment.strategy", RoundRobinAssignor.class.getName());
         consumerProps.put("key.deserializer", StringDeserializer.class.getName());
         consumerProps.put("value.deserializer", StringDeserializer.class.getName());
+
+        consumerProps.put("isolation.level", "read_committed");
+        consumerProps.put("enable.auto.commit", "false");
+
         return consumerProps;
     }
 
@@ -26,6 +30,9 @@ public class Utils {
         producerProps.put("value.serializer", StringSerializer.class.getName());
         producerProps.put("key.deserializer", StringDeserializer.class.getName());
         producerProps.put("value.deserializer", StringDeserializer.class.getName());
+
+        producerProps.put("acks", "all");
+
         return producerProps;
     }
 

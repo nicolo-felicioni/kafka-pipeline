@@ -15,11 +15,13 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
 
         Parser parser = new Parser();
-        TopicsManager topicsManager = TopicsManager.getInstance();
 
         // Parse global configurations
         Config config = parser.parseConfig();
         Config.printConfiguration();
+
+        TopicsManager topicsManager = TopicsManager.getInstance();
+
 
         // Define properties for consumers and producers
         Properties producerProps = Utils.getProducerProperties();
