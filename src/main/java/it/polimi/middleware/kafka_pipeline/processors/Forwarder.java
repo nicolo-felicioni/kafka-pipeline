@@ -11,8 +11,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
  */
 public class Forwarder extends StreamProcessor {
 
-	public Forwarder(int taskId, String id, String type, String from, String to, Properties producerProps, Properties consumerProps) {
-		super(taskId, id, type, from, to, producerProps, consumerProps);
+	public Forwarder(StreamProcessorProperties props, Properties producerProps, Properties consumerProps) {
+		super(props, producerProps, consumerProps);
 	}
 
 	@Override

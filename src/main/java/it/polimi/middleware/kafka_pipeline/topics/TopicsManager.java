@@ -84,15 +84,15 @@ public class TopicsManager {
     /**
      * Create topics starting from a list of strings.
      * @param newTopics         the list of topics to be created
-     * @param numPartitions     the number of partitions per topics
-     * @param replicationFactor the topics replication factor
      */
-    public void createTopics(List<String> newTopics, short numPartitions, short replicationFactor) {
+    public void createTopics(List<String> newTopics) {
         List<String> createdTopics = new ArrayList<>();
         for(String topic : newTopics) {
             try {
                 if (!createdTopics.contains(topic)) {
-                    CreateTopicsResult result = admin.createTopics(Collections.singletonList(new NewTopic(topic, numPartitions, replicationFactor)));
+                    CreateTopicsResult result = admin.createTopics(Collections.singletonList(
+                            new NewTopic(topic, Config.NUM_TOPICS_PARTITIONS, Config.REPLICATION_FACTOR))
+                    );
                     System.out.println("Created topic " + topic);
                     createdTopics.add(topic);
                 }
@@ -106,16 +106,14 @@ public class TopicsManager {
     /**
      * Create topics starting from the description of the pipeline.
      * @param processorsMap     map containing all the stream processors (the pipeline)
-     * @param numPartitions     the number of partitions per topics
-     * @param replicationFactor the topics replication factor
      */
-    public void createPipelineTopics(Map<String, StreamProcessor> processorsMap, short numPartitions, short replicationFactor) {
+    public void createPipelineTopics(Map<String, StreamProcessor> processorsMap) {
         List<String> topics = new ArrayList<>();
         for(String id : processorsMap.keySet()) {
             topics.add(processorsMap.get(id).getInputTopic());
             topics.add(processorsMap.get(id).getOutputTopic());
         }
-        createTopics(topics, numPartitions, replicationFactor);
+        createTopics(topics);
     }
 
     //TODO temporary, for debug

@@ -18,14 +18,7 @@ import java.util.*;
  */
 public abstract class StreamProcessor {
 
-    protected String id;
-    protected String type;
-    protected String from;
-    protected String to;
-    protected String inTopic;
-    protected String outTopic;
-
-    protected int taskId;
+    private StreamProcessorProperties props;
 
     protected KafkaProducer<String, String> producer;
     protected KafkaConsumer<String, String> consumer;
@@ -33,28 +26,21 @@ public abstract class StreamProcessor {
     protected Properties consumerProps;
     protected Properties producerProps;
 
-    public StreamProcessor(int taskId, String processorId, String type, String from, String to,
+    public StreamProcessor(StreamProcessorProperties props,
                                     Properties producerProps, Properties consumerProps) {
-        this.id = processorId;
-        this.type = type;
-        this.from = from;
-        this.to = to;
 
-        this.taskId = taskId;
-
-        this.inTopic = TopicsManager.getInputTopic(from, id);
-        this.outTopic = TopicsManager.getOutputTopic(id, to);
+        this.props = props;
 
         this.producerProps = producerProps;
 
         //todo temporary solution for transaction_id
-        final String transaction_id = id + "_" + to + "_" + taskId;
+        final String transaction_id = props.getID() + "_" + props.getTo() + "_" + props.getTaskID();
         this.producerProps.put("transactional.id", transaction_id);
 
         this.consumerProps = consumerProps;
 
         this.consumer = new KafkaConsumer<>(consumerProps);
-        this.consumer.subscribe(Collections.singletonList(this.inTopic));
+        this.consumer.subscribe(Collections.singletonList(props.getInputTopic()));
 
         this.producer = new KafkaProducer<>(producerProps);
 
@@ -66,15 +52,15 @@ public abstract class StreamProcessor {
     }
 
     public String getId() {
-        return id;
+        return props.getID();
     }
 
     public String getInputTopic() {
-        return inTopic;
+        return props.getInputTopic();
     }
 
     public String getOutputTopic() {
-        return outTopic;
+        return props.getInputTopic();
     }
 
     //strategy method
@@ -90,7 +76,7 @@ public abstract class StreamProcessor {
     }
 
     public void send(ProducerRecord<String, String> record) {
-        System.out.println("Task: " + taskId + " - ID: " + this.getId() + " - Tansaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
+        System.out.println("Task: " + props.getTaskID() + " - ID: " + this.getId() + " - Transaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
         producer.send(record);
     }
 
@@ -107,15 +93,15 @@ public abstract class StreamProcessor {
 
         //for every result, write it in the outTopic
         for (final ConsumerRecord<String, String> result_record : results) {
-            System.out.println("Task: " + taskId + " - ID: " + this.getId() + " - Consumed: topic:" + result_record.topic() + " - key:" + result_record.key() + " - value:" + result_record.value());
-            send(new ProducerRecord<>(outTopic, result_record.key(), result_record.value()));
+            System.out.println("Task: " + props.getTaskID() + " - ID: " + this.getId() + " - Consumed: topic:" + result_record.topic() + " - key:" + result_record.key() + " - value:" + result_record.value());
+            send(new ProducerRecord<>(props.getOutputTopic(), result_record.key(), result_record.value()));
         }
 
         // The producer manually commits the outputs for the
         // consumer within the transaction
         final Map<TopicPartition, OffsetAndMetadata> map = createPartitionOffsetMap(results);
 
-        //producer.sendOffsetsToTransaction(map, this.producerProps.getProperty("group.id"));
+        producer.sendOffsetsToTransaction(map, this.producerProps.getProperty("group.id"));
         producer.commitTransaction();
     }
 
@@ -124,7 +110,7 @@ public abstract class StreamProcessor {
 
     @Override
     public String toString() {
-        return "ID: " + id + " - From: " + from + " - To: " + to;
+        return "ID: " + props.getID() + " - From: " + props.getFrom() + " - To: " + props.getTo();
     }
 
     private Map<TopicPartition, OffsetAndMetadata> createPartitionOffsetMap(ConsumerRecords<String, String> records){

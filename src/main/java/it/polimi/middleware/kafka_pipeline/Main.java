@@ -1,8 +1,6 @@
 package it.polimi.middleware.kafka_pipeline;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
-import it.polimi.middleware.kafka_pipeline.common.Utils;
-import it.polimi.middleware.kafka_pipeline.pipeline.Pipeline;
 import it.polimi.middleware.kafka_pipeline.pipeline.Task;
 import it.polimi.middleware.kafka_pipeline.parser.Parser;
 import it.polimi.middleware.kafka_pipeline.threads.ThreadsExecutor;
@@ -22,27 +20,13 @@ public class Main {
 
         TopicsManager topicsManager = TopicsManager.getInstance();
 
-        // Define properties for consumers and producers
-        Properties producerProps = Utils.getProducerProperties();
-        Properties consumerProps = Utils.getConsumerProperties();
+        // create topics
+        List<String> topics = Parser.parseTopics();
+        topicsManager.setSourceTopic(topics.get(0));
+        topicsManager.setSinkTopic(topics.get(1));
+        topicsManager.createTopics(topics);
 
-        // pipeline containing all the nodes (stream processors)
-        //Pipeline pipeline = Parser.parsePipeline(producerProps, consumerProps);
-
-        short topicsNumPartitions = 1;
-        short topicsReplicationFactor = 1;
-
-        // create source and sink topics
-        List<String> globalTopics = Parser.parseSourceSinkTopics();
-
-        topicsManager.setSourceTopic(globalTopics.get(0));
-        topicsManager.setSinkTopic(globalTopics.get(1));
-
-        // TODO different strategy to parse and create topics
-        topicsManager.createPipelineTopics(Parser.parseProcessorsMap(-1, producerProps, consumerProps),
-                                                                        topicsNumPartitions, topicsReplicationFactor);
-
-        // create a list of tasks
+        // create tasks
         List<Task> tasks = new ArrayList<>();
         for (int i = 0; i < Config.TASKS_NUM; i++) {
             Task task = new Task(i);
