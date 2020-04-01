@@ -7,9 +7,9 @@
 - id: "source_id"
   type: "forward"
   from: "source"
-  to: "forwarder_id"
+  to: "sink_id"
 
 - id: "sink_id"
   type: "forward"
-  from: "forwarder_id"
+  from: "source_id"
   to: "sink"
