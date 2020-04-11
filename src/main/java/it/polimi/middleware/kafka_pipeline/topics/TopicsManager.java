@@ -61,6 +61,10 @@ public class TopicsManager {
             return getTopicName(from, id);
     }
 
+    public static String getStateTopic(String id) {
+        return getTopicName("state_topic", id);
+    }
+
     public static String getOutputTopic(String id, String to) {
         if(to.equals(SINK_KEYWORD))
             return SINK_TOPIC;

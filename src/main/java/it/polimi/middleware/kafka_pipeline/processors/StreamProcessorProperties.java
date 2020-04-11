@@ -18,6 +18,7 @@ public class StreamProcessorProperties {
 
         props.put("input_topic", TopicsManager.getInputTopic(from, ID));
         props.put("output_topic", TopicsManager.getOutputTopic(ID, to));
+        props.put("state_topic", TopicsManager.getStateTopic(ID));
     }
 
     public int getTaskID() {
@@ -42,6 +43,10 @@ public class StreamProcessorProperties {
 
     public String getInputTopic() {
         return props.getProperty("input_topic");
+    }
+
+    public String getStateTopic() {
+        return props.getProperty("state_topic");
     }
 
     public String getOutputTopic() {

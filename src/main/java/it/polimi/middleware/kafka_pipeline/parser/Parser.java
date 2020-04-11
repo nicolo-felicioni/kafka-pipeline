@@ -55,11 +55,15 @@ public class Parser {
             Map<String, String> obj = yaml_objs.get(i);
             String inTopic = TopicsManager.getInputTopic(obj.get("from"), obj.get("id"));
             String outTopic = TopicsManager.getOutputTopic(obj.get("id"), obj.get("to"));
+            String stateTopic = TopicsManager.getStateTopic(obj.get("id"));
             if (!topics.contains(inTopic)) {
                 topics.add(inTopic);
             }
             if (!topics.contains(outTopic)) {
                 topics.add(outTopic);
+            }
+            if (!topics.contains(stateTopic)) {
+                topics.add(stateTopic);
             }
         }
 

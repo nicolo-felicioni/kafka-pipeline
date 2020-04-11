@@ -1,6 +1,5 @@
 package it.polimi.middleware.kafka_pipeline.processors;
 
-import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -75,8 +74,25 @@ public abstract class StreamProcessor {
         return consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
     }
 
-    public void send(ProducerRecord<String, String> record) {
+    // this function sends the k,v pair to the output topic
+    public void send(String record_key, String record_value) {
+        ProducerRecord<String, String> record =
+                new ProducerRecord<>(props.getOutputTopic(), record_key, record_value);
+
         System.out.println("Task: " + props.getTaskID() + " - ID: " + this.getId() + " - Transaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
+
+        producer.send(record);
+    }
+
+
+    // this function sends the k,v pair to the state topic
+    public void saveState(String record_key, String record_value) {
+
+        ProducerRecord<String, String> record =
+                new ProducerRecord<>(props.getStateTopic(), record_key, record_value);
+
+        System.out.println("Task: " + props.getTaskID() + " - ID: " + this.getId() + " - Transaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
+
         producer.send(record);
     }
 
@@ -91,10 +107,15 @@ public abstract class StreamProcessor {
         //get the results from the operation
         results = executeOperation(records);
 
-        //for every result, write it in the outTopic
+        //for every result:
+        //      write it in the outTopic
+        //      save it in the stateTopic
         for (final ConsumerRecord<String, String> result_record : results) {
             System.out.println("Task: " + props.getTaskID() + " - ID: " + this.getId() + " - Consumed: topic:" + result_record.topic() + " - key:" + result_record.key() + " - value:" + result_record.value());
-            send(new ProducerRecord<>(props.getOutputTopic(), result_record.key(), result_record.value()));
+
+            send(result_record.key(), result_record.value());
+            saveState(result_record.key(),result_record.value());
+
         }
 
         // The producer manually commits the outputs for the
