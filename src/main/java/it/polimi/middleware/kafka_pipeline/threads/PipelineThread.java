@@ -1,27 +1,31 @@
 package it.polimi.middleware.kafka_pipeline.threads;
 
-import it.polimi.middleware.kafka_pipeline.pipeline.Task;
+import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PipelineThread extends Thread {
 
-    private int id;
-    private List<Task> tasks;
+    private String id;
+    private List<StreamProcessor> processors;
     private Boolean running;
 
-    public PipelineThread(int id, List<Task> tasks) {
-        this.id = id;
-        this.tasks = tasks;
+    public PipelineThread(int id, int taskManagerId) {
+        this.id = taskManagerId + "." + id;
+        this.processors = new ArrayList<>();
     }
 
     @Override
     public void run() {
+
+        System.out.println("Starting thread " + id + " with processors " + processors);
+
         running = true;
         while(running) {
-            for(Task task : tasks) {
-                System.out.println("Thread " + id + " - running task " + task.getId());
-                task.proceed();
+            for(StreamProcessor p : processors) {
+                System.out.println("Thread " + id + " - Running processor " + p.getId());
+                p.process();
 
                 try {
                     Thread.sleep(1000);
@@ -32,12 +36,18 @@ public class PipelineThread extends Thread {
         }
     }
 
-    public long getId() { return this.id; }
+    public String getID() { return this.id; }
+
+    public void assign(StreamProcessor p) {
+        processors.add(p);
+    }
 
     @Override
     public void interrupt() {
-        for(Task task : tasks)
-            task.stop();
+        for(StreamProcessor p : processors)
+            p.stop();
+
+        this.running = false;
         this.interrupt();
     }
 }

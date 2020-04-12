@@ -29,10 +29,8 @@ public class Parser {
         Config.SERVER_IP = String.valueOf(yaml_config.get(0).get("server_ip"));
         Config.SERVER_PORT = yaml_config.get(1).get("server_port");
         Config.GROUP = String.valueOf(yaml_config.get(2).get("group"));
-        Config.TASKS_NUM = yaml_config.get(3).get("tasks_num");
-        Config.PARALLELISM = yaml_config.get(4).get("parallelism");
-        Config.REPLICATION_FACTOR = yaml_config.get(5).get("replication_factor").shortValue();
-        Config.NUM_TOPICS_PARTITIONS = yaml_config.get(6).get("num_topics_partitions");
+        Config.REPLICATION_FACTOR = yaml_config.get(3).get("replication_factor").shortValue();
+        Config.NUM_TOPICS_PARTITIONS = yaml_config.get(4).get("num_topics_partitions");
         return config;
     }
 
@@ -76,27 +74,27 @@ public class Parser {
      * @param consumerProps
      * @return a map containing all the stream processors and their IDs
      */
-    public static Map<String, StreamProcessor> parseProcessorsMap(int taskId, Properties producerProps, Properties consumerProps) {
+    public static List<StreamProcessor> parsePipeline(Properties producerProps, Properties consumerProps) {
         // Parse pipeline structure and nodes
         ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
 
-        Map<String, StreamProcessor> processorsMap = new HashMap<>();
+        List<StreamProcessor> pipeline = new ArrayList<>();
         // create all the StreamProcessors
         StreamProcessor processor = null;
         for (int i = 2; i < yaml_objs.size(); i++) {
             Map<String, String> obj = yaml_objs.get(i);
             if (obj.get("type").equals("forward")) {
                 StreamProcessorProperties props = new StreamProcessorProperties(
-                        taskId, obj.get("id"), obj.get("type"), obj.get("from"), obj.get("to")
+                        obj.get("id"), obj.get("type"), obj.get("from"), obj.get("to")
                 );
                 processor = new Forwarder(props, producerProps, consumerProps);
             }
-            processorsMap.put(processor.getId(), processor);
-            System.out.println("Created processor " + processor.getId() + " - task: " + taskId);
+            pipeline.add(processor);
+            System.out.println("Created processor " + processor.getId());
         }
 
-        System.out.println("Processors map: " + processorsMap);
-        return processorsMap;
+        System.out.println("Processors map: " + pipeline);
+        return pipeline;
     }
 
     /**

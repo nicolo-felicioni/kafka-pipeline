@@ -1,9 +1,8 @@
 package it.polimi.middleware.kafka_pipeline;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
-import it.polimi.middleware.kafka_pipeline.pipeline.Task;
 import it.polimi.middleware.kafka_pipeline.parser.Parser;
-import it.polimi.middleware.kafka_pipeline.threads.ThreadsExecutor;
+import it.polimi.middleware.kafka_pipeline.threads.JobManager;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
 
 import java.util.*;
@@ -12,10 +11,14 @@ public class Main {
 
     public static void main(String[] args) {
 
+
         new Parser();
 
         // Parse global configurations
         Config config = Parser.parseConfig();
+
+        Config.THREADS_NUM = Runtime.getRuntime().availableProcessors();
+
         Config.printConfiguration();
 
         TopicsManager topicsManager = TopicsManager.getInstance();
@@ -27,17 +30,15 @@ public class Main {
         topicsManager.createTopics(topics);
 
         // create tasks
-        List<Task> tasks = new ArrayList<>();
+        /*List<Task> tasks = new ArrayList<>();
         for (int i = 0; i < Config.TASKS_NUM; i++) {
             Task task = new Task(i);
             tasks.add(task);
-        }
+        }*/
 
-        // assign tasks to the executor that will spawn threads
-        ThreadsExecutor executor = new ThreadsExecutor(tasks);
+        JobManager jobManager = new JobManager();
 
-        //Thread.sleep(5000);
+        jobManager.start();
 
-        //executor.shutdown();
     }
 }

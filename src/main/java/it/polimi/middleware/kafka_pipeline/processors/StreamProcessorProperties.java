@@ -8,9 +8,9 @@ public class StreamProcessorProperties {
 
     private Properties props;
 
-    public StreamProcessorProperties(int taskID, String ID, String type, String from, String to) {
+    public StreamProcessorProperties(String ID, String type, String from, String to) {
         props = new Properties();
-        props.put("taskID", String.valueOf(taskID));
+        //props.put("taskManagerId", String.valueOf(taskManagerId));
         props.put("ID", ID);
         props.put("type", type);
         props.put("from", from);
@@ -21,8 +21,8 @@ public class StreamProcessorProperties {
         props.put("state_topic", TopicsManager.getStateTopic(ID));
     }
 
-    public int getTaskID() {
-        return Integer.parseInt(props.getProperty("taskID"));
+    public int getTaskManagerID() {
+        return Integer.parseInt(props.getProperty("taskManagerId"));
     }
 
     public String getID() {
@@ -53,8 +53,8 @@ public class StreamProcessorProperties {
         return props.getProperty("output_topic");
     }
 
-    public void setTaskID(int taskID) {
-        props.setProperty("taskID", String.valueOf(taskID));
+    public void setTaskManagerID(int taskManagerID) {
+        props.setProperty("taskManagerID", String.valueOf(taskManagerID));
     }
 
     public void setID(String ID) {

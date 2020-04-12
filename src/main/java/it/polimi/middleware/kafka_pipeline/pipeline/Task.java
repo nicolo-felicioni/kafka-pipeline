@@ -15,8 +15,8 @@ public class Task {
 
     public Task(int id) {
         this.id = id;
-        this.pipeline = new Pipeline(Parser.parseProcessorsMap(id, Utils.getProducerProperties(),
-                                                                    Utils.getConsumerProperties()));
+        //this.pipeline = new Pipeline(Parser.parsePipeline(Utils.getProducerProperties(),
+        //                                                            Utils.getConsumerProperties()));
     }
 
     public void proceed() {

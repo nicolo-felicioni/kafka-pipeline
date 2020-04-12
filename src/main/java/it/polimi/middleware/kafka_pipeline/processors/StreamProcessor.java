@@ -33,7 +33,7 @@ public abstract class StreamProcessor {
         this.producerProps = producerProps;
 
         //todo temporary solution for transaction_id
-        final String transaction_id = props.getID() + "_" + props.getTo() + "_" + props.getTaskID();
+        final String transaction_id = props.getID() + "_" + props.getTo();  // + "_" + props.getTaskManagerID();
         this.producerProps.put("transactional.id", transaction_id);
 
         this.consumerProps = consumerProps;
@@ -79,7 +79,7 @@ public abstract class StreamProcessor {
         ProducerRecord<String, String> record =
                 new ProducerRecord<>(props.getOutputTopic(), record_key, record_value);
 
-        System.out.println("Task: " + props.getTaskID() + " - ID: " + this.getId() + " - Transaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
+        System.out.println("ID: " + this.getId() + " - Transaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
 
         producer.send(record);
     }
@@ -91,7 +91,7 @@ public abstract class StreamProcessor {
         ProducerRecord<String, String> record =
                 new ProducerRecord<>(props.getStateTopic(), record_key, record_value);
 
-        System.out.println("Task: " + props.getTaskID() + " - ID: " + this.getId() + " - Transaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
+        System.out.println("ID: " + this.getId() + " - Transaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
 
         producer.send(record);
     }
@@ -111,7 +111,7 @@ public abstract class StreamProcessor {
         //      write it in the outTopic
         //      save it in the stateTopic
         for (final ConsumerRecord<String, String> result_record : results) {
-            System.out.println("Task: " + props.getTaskID() + " - ID: " + this.getId() + " - Consumed: topic:" + result_record.topic() + " - key:" + result_record.key() + " - value:" + result_record.value());
+            System.out.println("ID: " + this.getId() + " - Consumed: topic:" + result_record.topic() + " - key:" + result_record.key() + " - value:" + result_record.value());
 
             send(result_record.key(), result_record.value());
             saveState(result_record.key(),result_record.value());
