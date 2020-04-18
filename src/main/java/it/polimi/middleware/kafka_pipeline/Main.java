@@ -17,8 +17,6 @@ public class Main {
         // Parse global configurations
         Config config = Parser.parseConfig();
 
-        Config.THREADS_NUM = Runtime.getRuntime().availableProcessors();
-
         Config.printConfiguration();
 
         TopicsManager topicsManager = TopicsManager.getInstance();
@@ -36,6 +34,11 @@ public class Main {
             tasks.add(task);
         }*/
 
+
+        /*
+            TODO : jobmanager should ask task  managers how many
+                   threads they can handle (avoid strugglers)
+         */
         JobManager jobManager = new JobManager();
 
         jobManager.start();

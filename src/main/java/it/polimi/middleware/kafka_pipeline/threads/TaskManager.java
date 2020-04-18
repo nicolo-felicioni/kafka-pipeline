@@ -1,9 +1,12 @@
 package it.polimi.middleware.kafka_pipeline.threads;
 
+import it.polimi.middleware.kafka_pipeline.common.Config;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.Math.min;
 
 public class TaskManager {
 
@@ -13,10 +16,9 @@ public class TaskManager {
     private List<PipelineThread> threads;
     //private ExecutorService executor;
 
-    public TaskManager(int id, int threads_num) {   //, List<StreamProcessor> processors) {
+    public TaskManager(int id, List<StreamProcessor> processors) {   //, List<StreamProcessor> processors) {
         this.id = id;
-        this.threads_num = threads_num;
-        this.processors = new ArrayList<>();  //processors;
+        this.processors = processors;
         this.threads = new ArrayList<>();
         //executor = Executors.newFixedThreadPool(threads_num);
     }
@@ -25,6 +27,9 @@ public class TaskManager {
      * Create threads, assign them to tasks and start executing them.
      */
     public void createThreads() {
+
+        this.threads_num = 1; //min(Runtime.getRuntime().availableProcessors(), this.processors.size());
+
         for (int i = 0; i < threads_num; i++)
             threads.add(new PipelineThread(i, this.id));
 

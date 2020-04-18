@@ -1,6 +1,7 @@
 package it.polimi.middleware.kafka_pipeline.parser;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
+import it.polimi.middleware.kafka_pipeline.common.Utils;
 import it.polimi.middleware.kafka_pipeline.processors.Forwarder;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessorProperties;
@@ -29,8 +30,9 @@ public class Parser {
         Config.SERVER_IP = String.valueOf(yaml_config.get(0).get("server_ip"));
         Config.SERVER_PORT = yaml_config.get(1).get("server_port");
         Config.GROUP = String.valueOf(yaml_config.get(2).get("group"));
-        Config.REPLICATION_FACTOR = yaml_config.get(3).get("replication_factor").shortValue();
-        Config.NUM_TOPICS_PARTITIONS = yaml_config.get(4).get("num_topics_partitions");
+        Config.PARALLELISM = yaml_config.get(3).get("parallelism");
+        Config.REPLICATION_FACTOR = yaml_config.get(4).get("replication_factor").shortValue();
+        Config.NUM_TOPICS_PARTITIONS = yaml_config.get(5).get("num_topics_partitions");
         return config;
     }
 
@@ -74,7 +76,7 @@ public class Parser {
      * @param consumerProps
      * @return a map containing all the stream processors and their IDs
      */
-    public static List<StreamProcessor> parsePipeline(Properties producerProps, Properties consumerProps) {
+    public static List<StreamProcessor> parsePipeline(int pipelineID) {
         // Parse pipeline structure and nodes
         ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
 
@@ -85,9 +87,14 @@ public class Parser {
             Map<String, String> obj = yaml_objs.get(i);
             if (obj.get("type").equals("forward")) {
                 StreamProcessorProperties props = new StreamProcessorProperties(
-                        obj.get("id"), obj.get("type"), obj.get("from"), obj.get("to")
+                        pipelineID,
+                        obj.get("id"),
+                        obj.get("type"),
+                        obj.get("from"),
+                        obj.get("to")
                 );
-                processor = new Forwarder(props, producerProps, consumerProps);
+                System.out.println(props.getPipelineID());
+                processor = new Forwarder(props, Utils.getProducerProperties(), Utils.getConsumerProperties());
             }
             pipeline.add(processor);
             System.out.println("Created processor " + processor.getId());

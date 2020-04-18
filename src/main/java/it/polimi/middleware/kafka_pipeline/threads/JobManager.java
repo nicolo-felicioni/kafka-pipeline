@@ -15,44 +15,45 @@ public class JobManager {
     public JobManager() {
         this.taskManagers = new ArrayList<>();
 
-        int tm_num = 2;
-        for (int i = 0; i < tm_num; i++)
-            taskManagers.add(new TaskManager(i, Config.THREADS_NUM));
-
-        List<StreamProcessor> pipeline = Parser.parsePipeline(Utils.getProducerProperties(),
-                                                                            Utils.getConsumerProperties());
-
-        // round robin assignment of operators to taskmanagers
-        int tm_index = 0;
-        for(int i = 0; i < pipeline.size(); i++) {
-            StreamProcessor p = pipeline.get(i);
-
-            System.out.println("JobManager : assigning to TaskManager " + tm_index + " processor " + p);
-
-            taskManagers.get(tm_index).assign(p);
-
-            tm_index = (tm_index + 1) % tm_num;
+        // create some pipelines, according to the PARALLELISM parameter
+        List<List<StreamProcessor>> pipelines = new ArrayList<>();
+        for (int i = 0; i < Config.PARALLELISM; i++){
+            List<StreamProcessor> p = Parser.parsePipeline(i);
+            pipelines.add(p);
         }
 
-        for (int i = 0; i < tm_num; i++)
-            taskManagers.get(i).createThreads();
+        // create a list of processors for each task manager
+        int tm_num = 2;
+        List<List<StreamProcessor>> tmProcessors = new ArrayList<>();
+        for (int i = 0; i < tm_num; i++) {
+            tmProcessors.add(new ArrayList<>());
+        }
 
-        /*for (int i = 0; i < 2; i++){
-            List<StreamProcessor> pipeline = Parser.parsePipeline(i, Utils.getProducerProperties(),
-                                                                            Utils.getConsumerProperties());
-            TaskManager tm = new TaskManager(i, pipeline, Config.THREADS_NUM);
-            tm.createThreads();
+        // round robin assignment of operators to task managers
+        int tm_index = 0;
+        for(int i = 0; i < pipelines.get(0).size(); i++) {
+            for(int j = 0; j < pipelines.size(); j++) {
 
+                StreamProcessor p = pipelines.get(j).get(i);
+
+                System.out.println("JobManager : assigning to TaskManager " + tm_index + " processor " + p);
+
+                tmProcessors.get(tm_index).add(p);
+
+                tm_index = (tm_index + 1) % tm_num;
+            }
+        }
+
+        for (int i = 0; i < tm_num; i++) {
+            TaskManager tm = new TaskManager(i, tmProcessors.get(i));
             taskManagers.add(tm);
-        }*/
+            tm.createThreads();
+        }
     }
 
     public void start() {
         for (TaskManager tm : taskManagers)
             tm.start();
     }
-
-
-
 
 }
