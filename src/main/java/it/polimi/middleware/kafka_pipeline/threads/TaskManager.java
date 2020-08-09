@@ -1,12 +1,9 @@
 package it.polimi.middleware.kafka_pipeline.threads;
 
-import it.polimi.middleware.kafka_pipeline.common.Config;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.lang.Math.min;
 
 public class TaskManager {
 

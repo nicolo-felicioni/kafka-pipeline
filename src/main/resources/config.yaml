@@ -7,8 +7,8 @@
 - group: "group_1"
 
 # number of copies of the pipeline
-- parallelism: 2
+- parallelism: 1
 #
-- replication_factor: 2
+- replication_factor: 1
 # number of partitions in each topic
-- num_topics_partitions: 2
+- num_topics_partitions: 1

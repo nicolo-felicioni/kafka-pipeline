@@ -54,7 +54,7 @@ public class TopicsManager {
         return from + "_" + to;
     }
 
-    public static String getInputTopic(String from, String id) {
+    public static String getInputTopic(String id, String from) {
         if(from.equals(SOURCE_KEYWORD))
             return SOURCE_TOPIC;
         else
@@ -114,8 +114,8 @@ public class TopicsManager {
     public void createPipelineTopics(Map<String, StreamProcessor> processorsMap) {
         List<String> topics = new ArrayList<>();
         for(String id : processorsMap.keySet()) {
-            topics.add(processorsMap.get(id).getInputTopic());
-            topics.add(processorsMap.get(id).getOutputTopic());
+            //topics.add(processorsMap.get(id).getInputTopic());
+            //topics.add(processorsMap.get(id).getOutputTopic());
         }
         createTopics(topics);
     }

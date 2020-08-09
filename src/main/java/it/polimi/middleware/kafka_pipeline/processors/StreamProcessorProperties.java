@@ -2,83 +2,83 @@ package it.polimi.middleware.kafka_pipeline.processors;
 
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
 
-import java.util.Properties;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StreamProcessorProperties {
 
-    private Properties props;
+    private int pipelineID;
+    private String ID;
+    private String type;
+    private List<String> from;
+    private List<String> to;
+    private List<String> inTopics;
+    private List<String> outTopics;
+    private String stateTopic;
 
-    public StreamProcessorProperties(int pipelineID, String ID, String type, String from, String to) {
-        props = new Properties();
+    public StreamProcessorProperties(int pipelineID, String ID, String type) {
+        this.pipelineID = pipelineID;
+        this.ID = ID;
+        this.type = type;
 
-        props.put("pipelineID", String.valueOf(pipelineID));
-        props.put("ID", ID);
-        props.put("type", type);
-        props.put("from", from);
-        props.put("to", to);
+        this.from = new ArrayList<>();
+        this.to = new ArrayList<>();
 
-        props.put("input_topic", TopicsManager.getInputTopic(from, ID));
-        props.put("output_topic", TopicsManager.getOutputTopic(ID, to));
-        props.put("state_topic", TopicsManager.getStateTopic(ID));
+        this.inTopics = new ArrayList<>();
+        this.outTopics = new ArrayList<>();
+
+        this.stateTopic = TopicsManager.getStateTopic(this.ID);
     }
 
     public int getPipelineID() {
-        return Integer.parseInt(props.getProperty("pipelineID"));
+        return pipelineID;
     }
 
     public String getID() {
-        return props.getProperty("ID");
+        return ID;
     }
 
     public String getType() {
-        return props.getProperty("type");
+        return type;
     }
 
-    public String getFrom() {
-        return props.getProperty("from");
+    public List<String> getFrom() {
+        return from;
     }
 
-    public String getTo() {
-        return props.getProperty("to");
+    public List<String> getTo() {
+        return to;
     }
 
-    public String getInputTopic() {
-        return props.getProperty("input_topic");
+    public List<String> getInTopics() {
+        return inTopics;
+    }
+
+    public List<String> getOutTopics() {
+        return outTopics;
     }
 
     public String getStateTopic() {
-        return props.getProperty("state_topic");
+        return stateTopic;
     }
 
-    public String getOutputTopic() {
-        return props.getProperty("output_topic");
+    public void addInput(String f) {
+        if (!this.from.contains(f)) {
+            this.from.add(f);
+            this.inTopics.add(TopicsManager.getInputTopic(this.ID, f));
+            System.out.println("Processor " + getID() + ": added input topic");
+        }
     }
 
-    public void setPipelineID(int pipelineID) {
-        props.setProperty("pipelineID", String.valueOf(pipelineID));
+    public void addOutput(String t) {
+        if (!this.to.contains(t)) {
+            this.to.add(t);
+            this.outTopics.add(TopicsManager.getOutputTopic(this.ID, t));
+            System.out.println("Processor " + getID() + ": added output topic");
+        }
     }
 
-    public void setID(String ID) {
-        props.setProperty("ID", ID);
-    }
-
-    public void setType(String type) {
-        props.setProperty("type", type);
-    }
-
-    public void setFrom(String from) {
-        props.setProperty("from", from);
-    }
-
-    public void setTo(String to) {
-        props.setProperty("to", to);
-    }
-
-    public void setInputTopic(String inTopic) {
-        props.setProperty("input_topic", inTopic);
-    }
-
-    public void setOutputTopic(String outTopic) {
-        props.setProperty("output_topic", outTopic);
+    public String toString() {
+        return "Properties - PipelineID: " + getPipelineID() + " - ID: " + getID() + " - Type: " + getType() + " - From: " + getInTopics() + " - To: " + getOutTopics() + " - State topic: " + getStateTopic();
     }
 }

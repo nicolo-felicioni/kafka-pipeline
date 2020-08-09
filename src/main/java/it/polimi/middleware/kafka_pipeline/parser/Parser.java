@@ -44,6 +44,8 @@ public class Parser {
     public static List<String> parseTopics() {
         ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
 
+        System.out.println(yaml_objs);
+
         ArrayList<String> topics = new ArrayList<>();
 
         String sourceTopic = yaml_objs.get(0).get("source_topic");
@@ -53,7 +55,7 @@ public class Parser {
 
         for (int i = 2; i < yaml_objs.size(); i++) {
             Map<String, String> obj = yaml_objs.get(i);
-            String inTopic = TopicsManager.getInputTopic(obj.get("from"), obj.get("id"));
+            String inTopic = TopicsManager.getInputTopic(obj.get("id"), obj.get("from"));
             String outTopic = TopicsManager.getOutputTopic(obj.get("id"), obj.get("to"));
             String stateTopic = TopicsManager.getStateTopic(obj.get("id"));
             if (!topics.contains(inTopic)) {
@@ -71,30 +73,42 @@ public class Parser {
     }
 
     /**
-     * @param taskId
-     * @param producerProps
-     * @param consumerProps
+     * @param pipelineID
      * @return a map containing all the stream processors and their IDs
      */
     public static List<StreamProcessor> parsePipeline(int pipelineID) {
         // Parse pipeline structure and nodes
         ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
 
+        System.out.println(yaml_objs);
+
         List<StreamProcessor> pipeline = new ArrayList<>();
-        // create all the StreamProcessors
+        Map<String, StreamProcessorProperties> propertiesMap = new HashMap<>();
+        StreamProcessorProperties properties;
         StreamProcessor processor = null;
         for (int i = 2; i < yaml_objs.size(); i++) {
             Map<String, String> obj = yaml_objs.get(i);
-            if (obj.get("type").equals("forward")) {
-                StreamProcessorProperties props = new StreamProcessorProperties(
-                        pipelineID,
-                        obj.get("id"),
-                        obj.get("type"),
-                        obj.get("from"),
-                        obj.get("to")
-                );
-                System.out.println(props.getPipelineID());
-                processor = new Forwarder(props, Utils.getProducerProperties(), Utils.getConsumerProperties());
+
+            String processorID = obj.get("id");
+
+            if (!propertiesMap.containsKey(processorID)) {
+                properties = new StreamProcessorProperties(pipelineID, processorID, obj.get("type"));
+                propertiesMap.put(processorID, properties);
+            }
+
+            properties = propertiesMap.get(processorID);
+            properties.addInput(obj.get("from"));
+            properties.addOutput(obj.get("to"));
+        }
+
+        System.out.println(propertiesMap);
+
+        for (String id : propertiesMap.keySet()) {
+            properties = propertiesMap.get(id);
+            if (properties.getType().equals("forward")) {
+
+                //System.out.println(props.getPipelineID());
+                processor = new Forwarder(properties, Utils.getProducerProperties(), Utils.getConsumerProperties());
             }
             pipeline.add(processor);
             System.out.println("Created processor " + processor.getId());

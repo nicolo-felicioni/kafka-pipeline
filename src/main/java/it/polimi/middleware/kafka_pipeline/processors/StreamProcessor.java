@@ -34,14 +34,16 @@ public abstract class StreamProcessor {
         // TODO : temporary solution for transactional_id
         final String transactional_id = props.getID() + "_" + props.getPipelineID();
         this.producerProps.put("transactional.id", transactional_id);
-        System.out.println(this.producerProps.getProperty("transactional.id"));
+        //System.out.println(this.producerProps.getProperty("transactional.id"));
         System.out.println("Processor " + getId() + " : tansactional.id = " + transactional_id);
 
         this.consumerProps = consumerProps;
 
         this.consumer = new KafkaConsumer<>(consumerProps);
         // Todo statically assign to partitions (maybe)
-        this.consumer.subscribe(Collections.singletonList(props.getInputTopic()));
+        for (String topic : props.getInTopics()) {
+            this.consumer.subscribe(Collections.singletonList(topic));
+        }
 
         this.producer = new KafkaProducer<>(this.producerProps);
 
@@ -56,15 +58,15 @@ public abstract class StreamProcessor {
         return props.getID();
     }
 
-    public String getInputTopic() {
-        return props.getInputTopic();
+    public List<String> getInputTopic() {
+        return props.getInTopics();
     }
 
-    public String getOutputTopic() {
-        return props.getInputTopic();
+    public List<String> getOutputTopic() {
+        return props.getOutTopics();
     }
 
-    //strategy method
+    // strategy method
     public abstract ConsumerRecords<String, String> executeOperation(ConsumerRecords<String, String> records);
 
     public void stop() {
@@ -78,12 +80,14 @@ public abstract class StreamProcessor {
 
     // this function sends the k,v pair to the output topic
     public void send(String record_key, String record_value) {
-        ProducerRecord<String, String> record =
-                new ProducerRecord<>(props.getOutputTopic(), record_key, record_value);
+        for (String topic : props.getOutTopics()) {
+            ProducerRecord<String, String> record =
+                    new ProducerRecord<>(topic, record_key, record_value);
 
-        System.out.println("ID: " + this.getId() + " " + props.getPipelineID() + " - Transaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
+            System.out.println("ID: " + this.getId() + " " + props.getPipelineID() + " - Transaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
 
-        producer.send(record);
+            producer.send(record);
+        }
     }
 
     // this function sends the k,v pair to the state topic
