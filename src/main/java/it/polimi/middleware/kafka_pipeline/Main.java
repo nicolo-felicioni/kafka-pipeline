@@ -11,11 +11,9 @@ public class Main {
 
     public static void main(String[] args) {
 
-
-        new Parser();
-
         // Parse global configurations
-        Config config = Parser.parseConfig();
+        new Parser();
+        Parser.parseConfig();
 
         Config.printConfiguration();
 
@@ -26,22 +24,13 @@ public class Main {
         topicsManager.setSourceTopic(topics.get(0));
         topicsManager.setSinkTopic(topics.get(1));
         topicsManager.createTopics(topics);
-
-        // create tasks
-        /*List<Task> tasks = new ArrayList<>();
-        for (int i = 0; i < Config.TASKS_NUM; i++) {
-            Task task = new Task(i);
-            tasks.add(task);
-        }*/
-
+        topicsManager.createTopics(Arrays.asList(Config.HEARTBEAT_TOPIC));
 
         /*
-            TODO : jobmanager should ask task  managers how many
+            TODO : jobmanager should ask task managers how many
                    threads they can handle (avoid strugglers)
          */
-        JobManager jobManager = new JobManager();
-
-        jobManager.start();
+        new JobManager().start();
 
     }
 }

@@ -1,6 +1,7 @@
 package it.polimi.middleware.kafka_pipeline.threads;
 
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
+import it.polimi.middleware.kafka_pipeline.threads.heartbeat.Heartbeat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,19 +12,21 @@ public class TaskManager {
     private int threads_num;
     private List<StreamProcessor> processors;
     private List<PipelineThread> threads;
-    //private ExecutorService executor;
+    private Heartbeat heartbeatThread;
 
-    public TaskManager(int id, List<StreamProcessor> processors) {   //, List<StreamProcessor> processors) {
+    public TaskManager(int id, List<StreamProcessor> processors) {
         this.id = id;
         this.processors = processors;
         this.threads = new ArrayList<>();
-        //executor = Executors.newFixedThreadPool(threads_num);
+        heartbeatThread = new Heartbeat(this.id);
     }
 
     /**
      * Create threads, assign them to tasks and start executing them.
      */
     public void createThreads() {
+
+        this.heartbeatThread.start();
 
         this.threads_num = 1; //min(Runtime.getRuntime().availableProcessors(), this.processors.size());
 
@@ -74,6 +77,5 @@ public class TaskManager {
     public int getId() {
         return this.id;
     }
-
 
 }

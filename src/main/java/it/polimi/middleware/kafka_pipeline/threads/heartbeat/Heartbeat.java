@@ -1,0 +1,47 @@
+package it.polimi.middleware.kafka_pipeline.threads.heartbeat;
+
+import it.polimi.middleware.kafka_pipeline.common.Config;
+import it.polimi.middleware.kafka_pipeline.common.Utils;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
+public class Heartbeat extends Thread {
+
+    private int taskManagerID;
+    private KafkaProducer<String, String> heartbeatProducer;
+    private Boolean running;
+
+    public Heartbeat(int taskManagerID) {
+        this.taskManagerID = taskManagerID;
+        heartbeatProducer = new KafkaProducer<>(Utils.getProducerProperties());
+    }
+
+    @Override
+    public void run() {
+
+        System.out.println("Starting heartbeat thread");
+        running = true;
+
+        while(running) {
+            ProducerRecord<String, String> record =
+                    new ProducerRecord<>(Config.HEARTBEAT_TOPIC,
+                                            String.valueOf(this.taskManagerID), "ping");
+
+            System.out.println("TaskManager " + record.key() + ": produced heartbeat");
+
+            heartbeatProducer.send(record);
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void interrupt() {
+        this.running = false;
+        this.interrupt();
+    }
+}
