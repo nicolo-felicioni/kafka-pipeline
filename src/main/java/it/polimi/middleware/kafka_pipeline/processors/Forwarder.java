@@ -9,7 +9,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
  * it simply forwards incoming messages to its "outgoing topic",
  * i.e. to the next StreamProcessor in the pipeline.
  */
-public class Forwarder extends StreamProcessor {
+public class Forwarder extends StatelessStreamProcessor {
 
 	public Forwarder(StreamProcessorProperties props, Properties producerProps, Properties consumerProps) {
 		super(props, producerProps, consumerProps);
