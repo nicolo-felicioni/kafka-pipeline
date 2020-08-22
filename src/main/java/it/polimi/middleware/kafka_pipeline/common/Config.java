@@ -2,8 +2,8 @@ package it.polimi.middleware.kafka_pipeline.common;
 
 public class Config {
 
-    public static String CONFIG_FILE = "config.yaml";
-    public static String PIPELINE_FILE = "pipeline.yaml";
+    public static final String CONFIG_FILE = "config.yaml";
+    public static final String PIPELINE_FILE = "pipeline.yaml";
 
     public static String SERVER_IP;
     public static int SERVER_PORT;
@@ -15,6 +15,7 @@ public class Config {
     public static int NUM_TOPICS_PARTITIONS;
 
     public static final String HEARTBEAT_TOPIC = "heartbeat_topic";
+    public static final String SETTINGS_TOPIC = "settings_topic";
 
     public static void printConfiguration(){
         System.out.println("\nServer ip: " + Config.SERVER_IP);

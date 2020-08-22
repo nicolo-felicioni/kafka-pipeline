@@ -7,7 +7,7 @@ import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
 
 import java.util.*;
 
-public class Main {
+public class MainJobManager {
 
     public static void main(String[] args) {
 
@@ -24,7 +24,7 @@ public class Main {
         topicsManager.setSourceTopic(topics.get(0));
         topicsManager.setSinkTopic(topics.get(1));
         topicsManager.createTopics(topics);
-        topicsManager.createTopics(Arrays.asList(Config.HEARTBEAT_TOPIC));
+        topicsManager.createTopics(Collections.singletonList(Config.HEARTBEAT_TOPIC));
 
         /*
             TODO : jobmanager should ask task managers how many

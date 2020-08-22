@@ -104,7 +104,7 @@ public class TopicsManager {
                 // do nothing
             }
         }
-        System.out.println("Created topics");
+        //System.out.println("Created topics");
     }
 
     /**

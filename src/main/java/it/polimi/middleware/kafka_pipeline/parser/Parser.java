@@ -1,6 +1,7 @@
 package it.polimi.middleware.kafka_pipeline.parser;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
+import it.polimi.middleware.kafka_pipeline.common.ProcessorType;
 import it.polimi.middleware.kafka_pipeline.common.Utils;
 import it.polimi.middleware.kafka_pipeline.processors.Forwarder;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
@@ -92,7 +93,7 @@ public class Parser {
             String processorID = obj.get("id");
 
             if (!propertiesMap.containsKey(processorID)) {
-                properties = new StreamProcessorProperties(pipelineID, processorID, obj.get("type"));
+                properties = new StreamProcessorProperties(pipelineID, processorID, Utils.getProcessorType(obj.get("type")));
                 propertiesMap.put(processorID, properties);
             }
 
@@ -105,11 +106,7 @@ public class Parser {
 
         for (String id : propertiesMap.keySet()) {
             properties = propertiesMap.get(id);
-            if (properties.getType().equals("forward")) {
-
-                //System.out.println(props.getPipelineID());
-                processor = new Forwarder(properties, Utils.getProducerProperties(), Utils.getConsumerProperties());
-            }
+            processor = Utils.getProcessorByType(properties);
             pipeline.add(processor);
             System.out.println("Created processor " + processor.getId());
         }

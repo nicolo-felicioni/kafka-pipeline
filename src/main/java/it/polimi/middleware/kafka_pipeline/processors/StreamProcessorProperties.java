@@ -1,5 +1,6 @@
 package it.polimi.middleware.kafka_pipeline.processors;
 
+import it.polimi.middleware.kafka_pipeline.common.ProcessorType;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
 
 import java.util.ArrayList;
@@ -9,14 +10,14 @@ public class StreamProcessorProperties {
 
     private int pipelineID;
     private String ID;
-    private String type;
+    private ProcessorType type;
     private List<String> from;
     private List<String> to;
     private List<String> inTopics;
     private List<String> outTopics;
     private String stateTopic;
 
-    public StreamProcessorProperties(int pipelineID, String ID, String type) {
+    public StreamProcessorProperties(int pipelineID, String ID, ProcessorType type) {
         this.pipelineID = pipelineID;
         this.ID = ID;
         this.type = type;
@@ -38,7 +39,7 @@ public class StreamProcessorProperties {
         return ID;
     }
 
-    public String getType() {
+    public ProcessorType getType() {
         return type;
     }
 
@@ -79,6 +80,6 @@ public class StreamProcessorProperties {
     }
 
     public String toString() {
-        return "Properties - PipelineID: " + getPipelineID() + " - ID: " + getID() + " - Type: " + getType() + " - From: " + getInTopics() + " - To: " + getOutTopics() + " - State topic: " + getStateTopic();
+        return "Properties - PipelineID: " + getPipelineID() + " - ID: " + getID() + " - Type: " + getType() + " - InTopics: " + getInTopics() + " - OutTopics: " + getOutTopics() + " - State topic: " + getStateTopic();
     }
 }

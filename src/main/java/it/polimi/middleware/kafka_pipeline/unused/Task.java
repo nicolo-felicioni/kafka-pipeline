@@ -1,7 +1,4 @@
-package it.polimi.middleware.kafka_pipeline.pipeline;
-
-import it.polimi.middleware.kafka_pipeline.common.Utils;
-import it.polimi.middleware.kafka_pipeline.parser.Parser;
+package it.polimi.middleware.kafka_pipeline.unused;
 
 /**
  * This class represents the main components of an application.

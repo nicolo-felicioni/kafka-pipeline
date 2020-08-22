@@ -1,4 +1,4 @@
-package it.polimi.middleware.kafka_pipeline.pipeline;
+package it.polimi.middleware.kafka_pipeline.unused;
 
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import java.util.*;

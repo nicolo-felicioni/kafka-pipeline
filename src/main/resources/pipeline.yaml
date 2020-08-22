@@ -8,31 +8,10 @@
 - id: "source_id"
   type: "forward"
   from: "source"
-  to: "one_id"
-
-- id: "source_id"
-  type: "forward"
-  from: "source"
-  to: "two_id"
-
-# PROCESSORS
-- id: "one_id"
-  type: "forward"
-  from: "source_id"
-  to: "sink_id"
-
-- id: "two_id"
-  type: "forward"
-  from: "source_id"
   to: "sink_id"
 
 # SINK NODE
 - id: "sink_id"
   type: "forward"
-  from: "one_id"
-  to: "sink"
-
-- id: "sink_id"
-  type: "forward"
-  from: "two_id"
+  from: "source_id"
   to: "sink"
