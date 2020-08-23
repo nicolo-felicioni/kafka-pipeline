@@ -1,9 +1,7 @@
 package it.polimi.middleware.kafka_pipeline.parser;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
-import it.polimi.middleware.kafka_pipeline.common.ProcessorType;
 import it.polimi.middleware.kafka_pipeline.common.Utils;
-import it.polimi.middleware.kafka_pipeline.processors.Forwarder;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessorProperties;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
@@ -77,16 +75,15 @@ public class Parser {
      * @param pipelineID
      * @return a map containing all the stream processors and their IDs
      */
-    public static List<StreamProcessor> parsePipeline(int pipelineID) {
+    public static List<StreamProcessorProperties> parsePipeline(int pipelineID) {
         // Parse pipeline structure and nodes
         ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
 
         System.out.println(yaml_objs);
 
-        List<StreamProcessor> pipeline = new ArrayList<>();
         Map<String, StreamProcessorProperties> propertiesMap = new HashMap<>();
         StreamProcessorProperties properties;
-        StreamProcessor processor = null;
+        //StreamProcessor processor = null;
         for (int i = 2; i < yaml_objs.size(); i++) {
             Map<String, String> obj = yaml_objs.get(i);
 
@@ -104,15 +101,16 @@ public class Parser {
 
         System.out.println(propertiesMap);
 
-        for (String id : propertiesMap.keySet()) {
+        /*for (String id : propertiesMap.keySet()) {
             properties = propertiesMap.get(id);
             processor = Utils.getProcessorByType(properties);
             pipeline.add(processor);
             System.out.println("Created processor " + processor.getId());
-        }
+        }*/
 
-        System.out.println("Processors map: " + pipeline);
-        return pipeline;
+        System.out.println("Properties map: " + propertiesMap);
+
+        return new ArrayList<>(propertiesMap.values());
     }
 
     /**

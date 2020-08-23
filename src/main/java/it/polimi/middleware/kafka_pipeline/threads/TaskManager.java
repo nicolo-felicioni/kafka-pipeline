@@ -2,7 +2,6 @@ package it.polimi.middleware.kafka_pipeline.threads;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
 import it.polimi.middleware.kafka_pipeline.common.JsonPropertiesSerializer;
-import it.polimi.middleware.kafka_pipeline.common.ProcessorType;
 import it.polimi.middleware.kafka_pipeline.common.Utils;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessorProperties;
@@ -58,7 +57,7 @@ public class TaskManager {
             ConsumerRecords<String, String> records = consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
             for (ConsumerRecord<String, String> r : records) {
                 if (Integer.parseInt(r.key()) == this.id) {
-                    if (r.value().equals("stop")) {
+                    if (r.value().equals("eos")) {
                         stop = true;
                     }
                     else {
@@ -98,6 +97,15 @@ public class TaskManager {
         for (PipelineThread t : threads)
             t.start();
         this.heartbeatThread.start();
+
+        /*KafkaConsumer<String, String> consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
+        consumer.subscribe(Collections.singletonList(Config.SETTINGS_TOPIC + "_" + this.id));
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
+            for (ConsumerRecord<String, String> r : records) {
+                System.out.println(r.key() + " - " + r.value());
+            }
+        }*/
     }
 
     public void stop() {
