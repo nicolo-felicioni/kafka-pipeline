@@ -7,11 +7,22 @@
 # SOURCE NODE
 - id: "source_id"
   type: "forward"
-  from: "source"
+  to: "nodo_bello_1"
+
+- id: "source_id"
+  type: "forward"
+  to: "nodo_bello_2"
+
+# INTERMEDIATE NODES
+- id: "nodo_bello_1"
+  type: "forward"
+  to: "sink_id"
+
+- id: "nodo_bello_2"
+  type: "forward"
   to: "sink_id"
 
 # SINK NODE
 - id: "sink_id"
   type: "forward"
-  from: "source_id"
   to: "sink"

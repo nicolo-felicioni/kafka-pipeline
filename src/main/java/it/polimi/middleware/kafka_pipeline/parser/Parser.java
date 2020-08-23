@@ -54,12 +54,12 @@ public class Parser {
 
         for (int i = 2; i < yaml_objs.size(); i++) {
             Map<String, String> obj = yaml_objs.get(i);
-            String inTopic = TopicsManager.getInputTopic(obj.get("id"), obj.get("from"));
+            //String inTopic = TopicsManager.getInputTopic(obj.get("id"), obj.get("from"));
             String outTopic = TopicsManager.getOutputTopic(obj.get("id"), obj.get("to"));
             String stateTopic = TopicsManager.getStateTopic(obj.get("id"));
-            if (!topics.contains(inTopic)) {
-                topics.add(inTopic);
-            }
+            //if (!topics.contains(inTopic)) {
+            //    topics.add(inTopic);
+            //}
             if (!topics.contains(outTopic)) {
                 topics.add(outTopic);
             }
@@ -79,11 +79,11 @@ public class Parser {
         // Parse pipeline structure and nodes
         ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
 
-        System.out.println(yaml_objs);
+        System.out.println("Parsed yaml: " + yaml_objs);
 
         Map<String, StreamProcessorProperties> propertiesMap = new HashMap<>();
         StreamProcessorProperties properties;
-        //StreamProcessor processor = null;
+
         for (int i = 2; i < yaml_objs.size(); i++) {
             Map<String, String> obj = yaml_objs.get(i);
 
@@ -95,18 +95,31 @@ public class Parser {
             }
 
             properties = propertiesMap.get(processorID);
-            properties.addInput(obj.get("from"));
+            //properties.addInput(obj.get("from"));
             properties.addOutput(obj.get("to"));
         }
 
-        System.out.println(propertiesMap);
+        // for each processor, get the "to" field and assign
+        // the same IDs as input to the destination node
+        for (String processorID : propertiesMap.keySet()) {
+            properties = propertiesMap.get(processorID); // node's properties
+            for (String destinationProcessor : properties.getTo()) {
+                // destinationProcessor : properties of the node with id equal to the one in the "to" field
+                if (!destinationProcessor.equals("sink")) {
+                    StreamProcessorProperties destinationProperties = propertiesMap.get(destinationProcessor);
+                    //System.out.println(processorID);
+                    destinationProperties.addInput(processorID);
+                }
+            }
+        }
 
-        /*for (String id : propertiesMap.keySet()) {
-            properties = propertiesMap.get(id);
-            processor = Utils.getProcessorByType(properties);
-            pipeline.add(processor);
-            System.out.println("Created processor " + processor.getId());
-        }*/
+        // the node having no input arcs will is set as source
+        for (String processorID : propertiesMap.keySet()) {
+            properties = propertiesMap.get(processorID);
+            if (properties.getFrom().size() == 0) {
+                properties.addInput("source");
+            }
+        }
 
         System.out.println("Properties map: " + propertiesMap);
 

@@ -66,16 +66,18 @@ public class StreamProcessorProperties {
     public void addInput(String f) {
         if (!this.from.contains(f)) {
             this.from.add(f);
-            this.inTopics.add(TopicsManager.getInputTopic(this.ID, f));
-            System.out.println("Processor " + getID() + ": added input topic");
+            String topic = TopicsManager.getInputTopic(this.ID, f);
+            this.inTopics.add(topic);
+            System.out.println("Processor " + getID() + ": added input topic " + topic);
         }
     }
 
     public void addOutput(String t) {
         if (!this.to.contains(t)) {
             this.to.add(t);
-            this.outTopics.add(TopicsManager.getOutputTopic(this.ID, t));
-            System.out.println("Processor " + getID() + ": added output topic");
+            String topic = TopicsManager.getOutputTopic(this.ID, t);
+            this.outTopics.add(topic);
+            System.out.println("Processor " + getID() + ": added output topic " + topic);
         }
     }
 
