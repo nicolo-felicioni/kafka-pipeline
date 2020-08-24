@@ -5,6 +5,7 @@ import it.polimi.middleware.kafka_pipeline.common.Utils;
 import it.polimi.middleware.kafka_pipeline.processors.Forwarder;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessorProperties;
+import it.polimi.middleware.kafka_pipeline.processors.Sum;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
 import org.yaml.snakeyaml.Yaml;
 import java.io.InputStream;
@@ -109,6 +110,9 @@ public class Parser {
 
                 //System.out.println(props.getPipelineID());
                 processor = new Forwarder(properties, Utils.getProducerProperties(), Utils.getConsumerProperties());
+            }
+            else if(properties.getType().equals("sum")){
+                processor = new Sum(properties, Utils.getProducerProperties(), Utils.getConsumerProperties());
             }
             pipeline.add(processor);
             System.out.println("Created processor " + processor.getId());
