@@ -3,6 +3,7 @@ package it.polimi.middleware.kafka_pipeline.common;
 import it.polimi.middleware.kafka_pipeline.processors.Forwarder;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessorProperties;
+import it.polimi.middleware.kafka_pipeline.processors.Sum;
 import org.apache.kafka.clients.consumer.RoundRobinAssignor;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -62,7 +63,7 @@ public class Utils {
             return new Forwarder(props, producerProps, consumerProps);
         }
         else if (type == ProcessorType.SUM) {
-            return null;
+            return new Sum(props, producerProps, consumerProps);
         }
         else if (type == ProcessorType.COUNT) {
             return null;
