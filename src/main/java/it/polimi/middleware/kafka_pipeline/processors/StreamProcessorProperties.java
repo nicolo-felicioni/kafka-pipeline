@@ -1,5 +1,6 @@
 package it.polimi.middleware.kafka_pipeline.processors;
 
+import it.polimi.middleware.kafka_pipeline.common.ProcessorType;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
 
 import java.util.ArrayList;
@@ -9,23 +10,23 @@ public class StreamProcessorProperties {
 
     private int pipelineID;
     private String ID;
-    private String type;
+    private ProcessorType type;
     private List<String> from;
     private List<String> to;
     private List<String> inTopics;
     private List<String> outTopics;
     private String stateTopic;
 
-    public StreamProcessorProperties(int pipelineID, String ID, String type) {
+    public StreamProcessorProperties(int pipelineID, String ID, ProcessorType type) {
         this.pipelineID = pipelineID;
         this.ID = ID;
         this.type = type;
 
-        this.from = new ArrayList<>();
-        this.to = new ArrayList<>();
-
         this.inTopics = new ArrayList<>();
         this.outTopics = new ArrayList<>();
+
+        this.from = new ArrayList<>();
+        this.to = new ArrayList<>();
 
         this.stateTopic = TopicsManager.getStateTopic(this.ID);
     }
@@ -38,7 +39,7 @@ public class StreamProcessorProperties {
         return ID;
     }
 
-    public String getType() {
+    public ProcessorType getType() {
         return type;
     }
 
@@ -65,20 +66,30 @@ public class StreamProcessorProperties {
     public void addInput(String f) {
         if (!this.from.contains(f)) {
             this.from.add(f);
-            this.inTopics.add(TopicsManager.getInputTopic(this.ID, f));
-            System.out.println("Processor " + getID() + ": added input topic");
+            String topic = TopicsManager.getInputTopic(this.ID, f);
+            this.inTopics.add(topic);
+            System.out.println("Processor " + getID() + ": added input topic " + topic);
         }
     }
 
     public void addOutput(String t) {
         if (!this.to.contains(t)) {
             this.to.add(t);
-            this.outTopics.add(TopicsManager.getOutputTopic(this.ID, t));
-            System.out.println("Processor " + getID() + ": added output topic");
+            String topic = TopicsManager.getOutputTopic(this.ID, t);
+            this.outTopics.add(topic);
+            System.out.println("Processor " + getID() + ": added output topic " + topic);
         }
     }
 
     public String toString() {
-        return "Properties - PipelineID: " + getPipelineID() + " - ID: " + getID() + " - Type: " + getType() + " - From: " + getInTopics() + " - To: " + getOutTopics() + " - State topic: " + getStateTopic();
+        return "Properties - PipelineID: " + getPipelineID() + " - ID: " + getID() + " - Type: " + getType() + " - InTopics: " + getInTopics() + " - OutTopics: " + getOutTopics() + " - State topic: " + getStateTopic();
+    }
+
+    private void computeOutputTopics() {
+        for (String t : this.to) {
+            String topic = TopicsManager.getOutputTopic(this.ID, t);
+            this.outTopics.add(topic);
+            System.out.println("Processor " + getID() + ": added output topic " + topic);
+        }
     }
 }

@@ -6,9 +6,15 @@
 # 'computation' name, to distinguish different computations
 - group: "group_1"
 
+# number of task managers to connect to
+- tm_number: 1
 # number of copies of the pipeline
 - parallelism: 1
-#
+# kafka topics replication factor
 - replication_factor: 1
 # number of partitions in each topic
 - num_topics_partitions: 1
+
+# input/output topics configuration
+- source_topic: "source_topic"
+- sink_topic: "sink_topic"

@@ -13,7 +13,7 @@ public class Heartbeat extends Thread {
 
     public Heartbeat(int taskManagerID) {
         this.taskManagerID = taskManagerID;
-        heartbeatProducer = new KafkaProducer<>(Utils.getProducerProperties());
+        this.heartbeatProducer = new KafkaProducer<>(Utils.getProducerProperties());
     }
 
     @Override
@@ -22,12 +22,18 @@ public class Heartbeat extends Thread {
         System.out.println("Starting heartbeat thread");
         running = true;
 
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         while(running) {
             ProducerRecord<String, String> record =
                     new ProducerRecord<>(Config.HEARTBEAT_TOPIC,
                                             String.valueOf(this.taskManagerID), "ping");
 
-            System.out.println("TaskManager " + record.key() + ": produced heartbeat");
+            //System.out.println("TaskManager " + record.key() + ": produced heartbeat");
 
             heartbeatProducer.send(record);
 

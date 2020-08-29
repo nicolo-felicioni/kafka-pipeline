@@ -1,7 +1,6 @@
 package it.polimi.middleware.kafka_pipeline.topics;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
-import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
@@ -13,12 +12,9 @@ public class TopicsManager {
 
     private static AdminClient admin;
 
-    private static final String SOURCE_KEYWORD = "source";
-    private static final String SINK_KEYWORD = "sink";
-    private static String SOURCE_TOPIC = "source_topic";
-    private static String SINK_TOPIC = "sink_topic";
-
-
+    private static String source_topic = "source_topic";
+    private static String sink_topic = "sink_topic";
+    
     private static TopicsManager topicsManagerInstance = null;
 
     /**
@@ -27,7 +23,7 @@ public class TopicsManager {
      */
     private TopicsManager() {
         Properties props = new Properties();
-        System.out.println(Config.SERVER_IP+":"+Config.SERVER_PORT);
+        //System.out.println(Config.SERVER_IP+":"+Config.SERVER_PORT);
         props.put("bootstrap.servers", Config.SERVER_IP+":"+Config.SERVER_PORT);
         // add something to properties
         admin = KafkaAdminClient.create(props);
@@ -55,8 +51,8 @@ public class TopicsManager {
     }
 
     public static String getInputTopic(String id, String from) {
-        if(from.equals(SOURCE_KEYWORD))
-            return SOURCE_TOPIC;
+        if(from.equals(Config.SOURCE_KEYWORD))
+            return source_topic;
         else
             return getTopicName(from, id);
     }
@@ -66,8 +62,8 @@ public class TopicsManager {
     }
 
     public static String getOutputTopic(String id, String to) {
-        if(to.equals(SINK_KEYWORD))
-            return SINK_TOPIC;
+        if(to.equals(Config.SINK_KEYWORD))
+            return sink_topic;
         else
             return TopicsManager.getTopicName(id, to);
     }
@@ -78,11 +74,11 @@ public class TopicsManager {
     }
 
     public void setSourceTopic(String sourceTopic) {
-        SOURCE_TOPIC = sourceTopic;
+        source_topic = sourceTopic;
     }
 
     public void setSinkTopic(String sinkTopic) {
-        SINK_TOPIC = sinkTopic;
+        sink_topic = sinkTopic;
     }
 
     /**
@@ -97,21 +93,21 @@ public class TopicsManager {
                     CreateTopicsResult result = admin.createTopics(Collections.singletonList(
                             new NewTopic(topic, Config.NUM_TOPICS_PARTITIONS, Config.REPLICATION_FACTOR))
                     );
-                    System.out.println("Created topic " + topic);
+                    System.out.println("TopicsManager: created topic " + topic);
                     createdTopics.add(topic);
                 }
             } catch (TopicExistsException e) {
                 // do nothing
             }
         }
-        System.out.println("Created topics");
+        //System.out.println("Created topics");
     }
 
     /**
      * Create topics starting from the description of the pipeline.
      * @param processorsMap     map containing all the stream processors (the pipeline)
      */
-    public void createPipelineTopics(Map<String, StreamProcessor> processorsMap) {
+    /*public void createPipelineTopics(Map<String, StreamProcessor> processorsMap) {
         List<String> topics = new ArrayList<>();
         for(String id : processorsMap.keySet()) {
             //topics.add(processorsMap.get(id).getInputTopic());
@@ -119,9 +115,5 @@ public class TopicsManager {
         }
         createTopics(topics);
     }
-
-    //TODO temporary, for debug
-    public String getSourceTopic(){
-        return SOURCE_TOPIC;
-    }
+    */
 }

@@ -1,13 +1,13 @@
 package it.polimi.middleware.kafka_pipeline.parser;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
+import it.polimi.middleware.kafka_pipeline.common.ProcessorType;
 import it.polimi.middleware.kafka_pipeline.common.Utils;
-import it.polimi.middleware.kafka_pipeline.processors.Forwarder;
-import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessorProperties;
 import it.polimi.middleware.kafka_pipeline.processors.Sum;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
 import org.yaml.snakeyaml.Yaml;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
@@ -31,9 +31,12 @@ public class Parser {
         Config.SERVER_IP = String.valueOf(yaml_config.get(0).get("server_ip"));
         Config.SERVER_PORT = yaml_config.get(1).get("server_port");
         Config.GROUP = String.valueOf(yaml_config.get(2).get("group"));
-        Config.PARALLELISM = yaml_config.get(3).get("parallelism");
-        Config.REPLICATION_FACTOR = yaml_config.get(4).get("replication_factor").shortValue();
-        Config.NUM_TOPICS_PARTITIONS = yaml_config.get(5).get("num_topics_partitions");
+        Config.TM_NUMBER = yaml_config.get(3).get("tm_number");
+        Config.PARALLELISM = yaml_config.get(4).get("parallelism");
+        Config.REPLICATION_FACTOR = yaml_config.get(5).get("replication_factor").shortValue();
+        Config.NUM_TOPICS_PARTITIONS = yaml_config.get(6).get("num_topics_partitions");
+        Config.SOURCE_TOPIC = String.valueOf(yaml_config.get(7).get("source_topic"));
+        Config.SINK_TOPIC = String.valueOf(yaml_config.get(8).get("sink_topic"));
         return config;
     }
 
@@ -43,32 +46,66 @@ public class Parser {
      *         input and the output topics from the pipeline point of view
      */
     public static List<String> parseTopics() {
-        ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
+
+        ArrayList<String> topics = new ArrayList<>();
+
+        topics.add(Config.SOURCE_TOPIC);
+        topics.add(Config.SINK_TOPIC);
+
+        try (InputStream in = (Parser.class).getClassLoader().getResourceAsStream(Config.PIPELINE_FILE)) {
+            Iterable<Object> itr = yaml.loadAll(in);
+            for (Object o : itr) {
+                List<LinkedHashMap> list = (ArrayList<LinkedHashMap>) o;
+                for (LinkedHashMap hm : list) {
+                    String processorID = (String)hm.get("id");
+                    List<String> to = (List<String>)hm.get("to");
+
+                    // add output topics
+                    for (String t : to) {
+                        //System.out.println(t);
+                        String outTopic = TopicsManager.getOutputTopic(processorID, t);
+                        if (!topics.contains(outTopic)) {
+                            topics.add(outTopic);
+                        }
+                    }
+
+                    // add state topic
+                    String stateTopic = TopicsManager.getStateTopic(processorID);
+                    if (!topics.contains(stateTopic)) {
+                        topics.add(stateTopic);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        /*ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
 
         System.out.println(yaml_objs);
 
         ArrayList<String> topics = new ArrayList<>();
 
-        String sourceTopic = yaml_objs.get(0).get("source_topic");
-        String sinkTopic = yaml_objs.get(1).get("sink_topic");
-        topics.add(sourceTopic);
-        topics.add(sinkTopic);
+        topics.add(Config.SOURCE_TOPIC);
+        topics.add(Config.SINK_TOPIC);
 
         for (int i = 2; i < yaml_objs.size(); i++) {
             Map<String, String> obj = yaml_objs.get(i);
-            String inTopic = TopicsManager.getInputTopic(obj.get("id"), obj.get("from"));
+            //String inTopic = TopicsManager.getInputTopic(obj.get("id"), obj.get("from"));
             String outTopic = TopicsManager.getOutputTopic(obj.get("id"), obj.get("to"));
             String stateTopic = TopicsManager.getStateTopic(obj.get("id"));
-            if (!topics.contains(inTopic)) {
-                topics.add(inTopic);
-            }
+            //if (!topics.contains(inTopic)) {
+            //    topics.add(inTopic);
+            //}
             if (!topics.contains(outTopic)) {
                 topics.add(outTopic);
             }
             if (!topics.contains(stateTopic)) {
                 topics.add(stateTopic);
             }
-        }
+        }*/
+
+        //System.out.println(topics);
 
         return topics;
     }
@@ -77,49 +114,69 @@ public class Parser {
      * @param pipelineID
      * @return a map containing all the stream processors and their IDs
      */
-    public static List<StreamProcessor> parsePipeline(int pipelineID) {
-        // Parse pipeline structure and nodes
-        ArrayList<Map<String, String>> yaml_objs = parseYaml(Config.PIPELINE_FILE);
+    public static List<StreamProcessorProperties> parsePipeline(int pipelineID) {
 
-        System.out.println(yaml_objs);
-
-        List<StreamProcessor> pipeline = new ArrayList<>();
         Map<String, StreamProcessorProperties> propertiesMap = new HashMap<>();
         StreamProcessorProperties properties;
-        StreamProcessor processor = null;
-        for (int i = 2; i < yaml_objs.size(); i++) {
-            Map<String, String> obj = yaml_objs.get(i);
 
-            String processorID = obj.get("id");
+        try (InputStream in = (Parser.class).getClassLoader().getResourceAsStream(Config.PIPELINE_FILE)) {
+            Iterable<Object> itr = yaml.loadAll(in);
+            for (Object o : itr) {
+                //System.out.println("Loaded object type: " + o.getClass());
+                List<LinkedHashMap> list = (ArrayList<LinkedHashMap>) o;
+                //System.out.println("-- the list --");
+                //System.out.println(list);
+                //System.out.println("-- iterating --");
 
-            if (!propertiesMap.containsKey(processorID)) {
-                properties = new StreamProcessorProperties(pipelineID, processorID, obj.get("type"));
-                propertiesMap.put(processorID, properties);
+                for (LinkedHashMap hm : list) {
+                    String processorID = (String)hm.get("id");
+                    ProcessorType processorType = Utils.getProcessorType((String)hm.get("type"));
+                    List<String> to = (List<String>)hm.get("to");
+
+                    if (!propertiesMap.containsKey(processorID)) {
+                        properties = new StreamProcessorProperties(
+                                pipelineID,
+                                processorID,
+                                processorType);
+                        for (String t : to) {
+                            properties.addOutput(t);
+                        }
+
+                        System.out.println(properties);
+
+                        propertiesMap.put(processorID, properties);
+                    }
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        // for each processor, get the "to" field and assign
+        // the same IDs as input to the destination node
+        for (String processorID : propertiesMap.keySet()) {
+            properties = propertiesMap.get(processorID); // node's properties
+            for (String destinationProcessor : properties.getTo()) {
+                // destinationProcessor : properties of the node with id equal to the one in the "to" field
+                if (!destinationProcessor.equals("sink")) {
+                    StreamProcessorProperties destinationProperties = propertiesMap.get(destinationProcessor);
+                    //System.out.println(processorID);
+                    destinationProperties.addInput(processorID);
+                }
+            }
+        }
+
+        // the node having no input arcs will is set as source
+        for (String processorID : propertiesMap.keySet()) {
             properties = propertiesMap.get(processorID);
-            properties.addInput(obj.get("from"));
-            properties.addOutput(obj.get("to"));
+            if (properties.getFrom().size() == 0) {
+                properties.addInput("source");
+            }
         }
 
-        System.out.println(propertiesMap);
+        System.out.println("Properties map: " + propertiesMap);
 
-        for (String id : propertiesMap.keySet()) {
-            properties = propertiesMap.get(id);
-            if (properties.getType().equals("forward")) {
-
-                //System.out.println(props.getPipelineID());
-                processor = new Forwarder(properties, Utils.getProducerProperties(), Utils.getConsumerProperties());
-            }
-            else if(properties.getType().equals("sum")){
-                processor = new Sum(properties, Utils.getProducerProperties(), Utils.getConsumerProperties());
-            }
-            pipeline.add(processor);
-            System.out.println("Created processor " + processor.getId());
-        }
-
-        System.out.println("Processors map: " + pipeline);
-        return pipeline;
+        return new ArrayList<>(propertiesMap.values());
     }
 
     /**
