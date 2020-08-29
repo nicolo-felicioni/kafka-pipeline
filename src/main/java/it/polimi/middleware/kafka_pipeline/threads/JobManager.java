@@ -17,10 +17,11 @@ public class JobManager {
 
     private HeartbeatController heartbeatController;
     private List<List<StreamProcessorProperties>> tmProcessors;
-    private int tmNumber = 1;
+    private int tmNumber;
     private boolean running = false;
 
     public JobManager() {
+        this.tmNumber = Config.TM_NUMBER;
 
         List<List<StreamProcessorProperties>> pipelines = createPipelines();
         this.tmProcessors = createTMProcessorsLists();

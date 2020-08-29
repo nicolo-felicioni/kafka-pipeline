@@ -22,11 +22,11 @@ public class StreamProcessorProperties {
         this.ID = ID;
         this.type = type;
 
-        this.from = new ArrayList<>();
-        this.to = new ArrayList<>();
-
         this.inTopics = new ArrayList<>();
         this.outTopics = new ArrayList<>();
+
+        this.from = new ArrayList<>();
+        this.to = new ArrayList<>();
 
         this.stateTopic = TopicsManager.getStateTopic(this.ID);
     }
@@ -83,5 +83,13 @@ public class StreamProcessorProperties {
 
     public String toString() {
         return "Properties - PipelineID: " + getPipelineID() + " - ID: " + getID() + " - Type: " + getType() + " - InTopics: " + getInTopics() + " - OutTopics: " + getOutTopics() + " - State topic: " + getStateTopic();
+    }
+
+    private void computeOutputTopics() {
+        for (String t : this.to) {
+            String topic = TopicsManager.getOutputTopic(this.ID, t);
+            this.outTopics.add(topic);
+            System.out.println("Processor " + getID() + ": added output topic " + topic);
+        }
     }
 }

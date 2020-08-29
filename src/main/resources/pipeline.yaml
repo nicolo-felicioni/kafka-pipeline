@@ -1,28 +1,21 @@
 
 # Pipeline structure and nodes description
 
-- source_topic: "source_topic"
-- sink_topic: "sink_topic"
-
 # SOURCE NODE
 - id: "source_id"
   type: "forward"
-  to: "nodo_bello_1"
-
-- id: "source_id"
-  type: "forward"
-  to: "nodo_bello_2"
+  to: ["nodo_1", "nodo_2"]
 
 # INTERMEDIATE NODES
-- id: "nodo_bello_1"
+- id: "nodo_1"
   type: "forward"
-  to: "sink_id"
+  to: ["sink_id"]
 
-- id: "nodo_bello_2"
+- id: "nodo_2"
   type: "forward"
-  to: "sink_id"
+  to: ["sink_id"]
 
 # SINK NODE
 - id: "sink_id"
   type: "forward"
-  to: "sink"
+  to: ["sink"]
