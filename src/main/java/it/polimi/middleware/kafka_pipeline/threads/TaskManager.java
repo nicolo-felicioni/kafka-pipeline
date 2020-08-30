@@ -9,6 +9,9 @@ import it.polimi.middleware.kafka_pipeline.threads.heartbeat.Heartbeat;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -19,13 +22,15 @@ import java.util.List;
 public class TaskManager {
 
     private int id;
-    private int threads_num = 1; //min(Runtime.getRuntime().availableProcessors(), this.processors.size());
+    private int threadsNum; //min(Runtime.getRuntime().availableProcessors(), this.processors.size());
     private List<StreamProcessor> processors;
     private List<PipelineThread> threads;
     private Heartbeat heartbeatThread;
 
-    public TaskManager(int id) {
+    public TaskManager(int id, int threadsNum) {
         this.id = id;
+        this.threadsNum = threadsNum;
+        System.out.println("Available threads number: " + this.threadsNum);
         this.processors = new ArrayList<>();
         this.threads = new ArrayList<>();
     }
@@ -37,8 +42,36 @@ public class TaskManager {
 
         this.heartbeatThread = new Heartbeat(this.id);
 
-        for (int i = 0; i < threads_num; i++)
+        for (int i = 0; i < threadsNum; i++)
             threads.add(new PipelineThread(i, this.id));
+    }
+
+    public void waitStartSettings() {
+        System.out.println("Waiting for JobManager to start setting up the pipeline");
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
+        consumer.assign(Collections.singleton(new TopicPartition(Config.SETTING_THREADS_TOPIC, 0)));
+        boolean start = false;
+        do {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
+            for (ConsumerRecord<String, String> r : records) {
+                if (Integer.parseInt(r.key()) == this.id && r.value().equals("start_settings")) {
+                    System.out.println("starting settings");
+                    start = true;
+                }
+            }
+
+        } while(!start);
+    }
+
+    public void sendThreadsNumber() {
+        KafkaProducer<String, String> producer = new KafkaProducer<>(Utils.getProducerProperties());
+
+        System.out.println("Sending available threads number");
+
+        ProducerRecord<String, String> record =
+                new ProducerRecord<>(Config.SETTING_THREADS_TOPIC, String.valueOf(this.id), String.valueOf(this.threadsNum));
+
+        producer.send(record);
     }
 
     public void waitSerializedPipeline() {
@@ -49,18 +82,20 @@ public class TaskManager {
     private List<StreamProcessorProperties> receiveProcessorsProperties() {
         JsonPropertiesSerializer serializer = new JsonPropertiesSerializer();
         List<StreamProcessorProperties> processorsProperties = new ArrayList<>();
+
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
-        consumer.subscribe(Collections.singletonList(Config.SETTINGS_TOPIC + "_" + this.id));
+        consumer.assign(Collections.singleton(new TopicPartition(Config.SETTINGS_TOPIC + "_" + this.id, 0)));
 
         boolean stop = false;
         do {
             ConsumerRecords<String, String> records = consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
             for (ConsumerRecord<String, String> r : records) {
                 if (Integer.parseInt(r.key()) == this.id) {
-                    if (r.value().equals("eos")) {
+                    if (r.value().equals("stop_settings")) {
                         stop = true;
                     }
                     else {
+                        //System.out.println(r.value());
                         StreamProcessorProperties props = serializer.deserialize(r.value());
                         System.out.println("Received: " + props);
                         processorsProperties.add(props);
@@ -70,8 +105,24 @@ public class TaskManager {
 
         } while(!stop);
 
+        System.out.println("Done settings");
+
         return processorsProperties;
     }
+
+    /*public void waitStartSignal() {
+        boolean start = false;
+        do {
+            ConsumerRecords<String, String> records = settings_consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
+            for (ConsumerRecord<String, String> r : records) {
+                if (Integer.parseInt(r.key()) == this.id && r.value().equals("start")) {
+                    System.out.println("starting");
+                    start = true;
+                }
+            }
+
+        } while(!start);
+    }*/
 
     private void createProcessors(List<StreamProcessorProperties> properties) {
         for (StreamProcessorProperties props : properties) {
@@ -88,24 +139,16 @@ public class TaskManager {
             System.out.println(p.getProperties());
             System.out.println("TaskManager " + id + " : assigning to Thread " + thread_index + " processor " + p);
             threads.get(thread_index).assign(p);
-            thread_index = (thread_index + 1) % threads_num;
+            thread_index = (thread_index + 1) % threadsNum;
         }
     }
 
     public void start() {
         assignProcessors();
-        for (PipelineThread t : threads)
+        for (PipelineThread t : threads) {
             t.start();
+        }
         this.heartbeatThread.start();
-
-        /*KafkaConsumer<String, String> consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
-        consumer.subscribe(Collections.singletonList(Config.SETTINGS_TOPIC + "_" + this.id));
-        while (true) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
-            for (ConsumerRecord<String, String> r : records) {
-                System.out.println(r.key() + " - " + r.value());
-            }
-        }*/
     }
 
     public void stop() {

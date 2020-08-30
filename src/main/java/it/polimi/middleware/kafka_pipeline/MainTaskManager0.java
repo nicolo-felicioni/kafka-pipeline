@@ -20,8 +20,10 @@ public class MainTaskManager0 {
         topicsManager.createTopics(Collections.singletonList(Config.HEARTBEAT_TOPIC));
         topicsManager.createTopics(Collections.singletonList(Config.SETTINGS_TOPIC));*/
 
-        TaskManager taskManager = new TaskManager(0);
+        TaskManager taskManager = new TaskManager(0, 2);
         taskManager.createThreads();
+        taskManager.waitStartSettings();
+        taskManager.sendThreadsNumber();
         taskManager.waitSerializedPipeline();
         taskManager.start();
 

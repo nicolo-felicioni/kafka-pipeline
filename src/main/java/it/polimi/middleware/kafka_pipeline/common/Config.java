@@ -22,6 +22,7 @@ public class Config {
     public static final String SINK_KEYWORD = "sink";
 
     public static final String HEARTBEAT_TOPIC = "heartbeat_topic";
+    public static final String SETTING_THREADS_TOPIC = "settings_threads_topic";
     public static final String SETTINGS_TOPIC = "settings_topic";
 
     public static void printConfiguration(){

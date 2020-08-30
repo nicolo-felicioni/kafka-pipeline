@@ -22,6 +22,7 @@ public class PipelineThread extends Thread {
         System.out.println("Starting thread " + id + " with processors " + processors);
 
         running = true;
+
         while(running) {
             for(StreamProcessor p : processors) {
                 System.out.println("Thread " + id + " - Running processor " + p.getId());
@@ -38,6 +39,8 @@ public class PipelineThread extends Thread {
 
     public String getID() { return this.id; }
 
+    public int getProcessorsNumber() { return processors.size(); }
+
     public void assign(StreamProcessor p) {
         processors.add(p);
     }
@@ -48,6 +51,6 @@ public class PipelineThread extends Thread {
             p.stop();
 
         this.running = false;
-        this.interrupt();
+        //this.interrupt();
     }
 }

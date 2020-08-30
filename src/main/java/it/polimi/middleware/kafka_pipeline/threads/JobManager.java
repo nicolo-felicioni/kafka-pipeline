@@ -2,78 +2,114 @@ package it.polimi.middleware.kafka_pipeline.threads;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
 import it.polimi.middleware.kafka_pipeline.common.JsonPropertiesSerializer;
+import it.polimi.middleware.kafka_pipeline.common.TaskManagerIsDownException;
 import it.polimi.middleware.kafka_pipeline.common.Utils;
 import it.polimi.middleware.kafka_pipeline.parser.Parser;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessorProperties;
 import it.polimi.middleware.kafka_pipeline.threads.heartbeat.HeartbeatController;
-import it.polimi.middleware.kafka_pipeline.unused.Pipeline;
+import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.SQLOutput;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 public class JobManager {
 
     private HeartbeatController heartbeatController;
-    private List<List<StreamProcessorProperties>> tmProcessors;
+    private LoadBalancer loadBalancer;
     private int tmNumber;
+    private int aliveTmNumber;
+    private List<List<StreamProcessorProperties>> tmProcessors;
     private boolean running = false;
 
     public JobManager() {
         this.tmNumber = Config.TM_NUMBER;
+        this.aliveTmNumber = this.tmNumber;
 
-        List<List<StreamProcessorProperties>> pipelines = createPipelines();
-        this.tmProcessors = createTMProcessorsLists();
+        this.loadBalancer = new LoadBalancer();
+        this.tmProcessors = this.createTMProcessorsLists();
+    }
 
-        tmProcessors = assignProcessors(pipelines, tmProcessors);
+    public void start() {
 
         System.out.println("JobManager : starting heartbeat controller thread");
         this.heartbeatController = new HeartbeatController(this.tmNumber);
         this.heartbeatController.start();
 
-        this.sendSerializedPipelines(tmProcessors);
-    }
+        this.setup();
 
-    public void start() {
         running = true;
 
-        /*try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        //this.sendStartSignal();
+
+        while (running) {
+            try {
+                if (this.aliveTmNumber == 0) {
+                    System.out.println("JobManager: no alive TaskManager exists");
+                    this.stop();
+                }
+            }
+            catch (TaskManagerIsDownException e) {
+                System.out.println(e.getMessage());
+                this.aliveTmNumber--;
+                this.tmProcessors = this.loadBalancer.rebalanceProcessors(e.getTaskManagerDownID(),
+                                                                            this.aliveTmNumber,
+                                                                            this.tmProcessors);
+            }
         }
 
-        KafkaProducer<String, String> producer = new KafkaProducer<>(Utils.getProducerProperties());
-
-        while(running) {
-            //System.out.println("Running ...");
-
-            for (int i = 0; i < tmNumber; i++) {
-                ProducerRecord<String, String> record =
-                        new ProducerRecord<>(Config.SETTINGS_TOPIC + "_" + i, String.valueOf(i), "debug");
-
-                producer.send(record);
-                System.out.println("Sent debug message");
-            }
-
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }*/
     }
 
     public void stop() {
         running = false;
     }
 
+    private void setup() {
+        KafkaProducer<String, String> producer = new KafkaProducer<>(Utils.getProducerProperties());
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
+        consumer.assign(Collections.singleton(new TopicPartition(Config.SETTING_THREADS_TOPIC, 0)));
+
+        System.out.println("JobManager: start settings");
+
+        for (int i = 0; i < this.tmNumber; i++) {
+            ProducerRecord<String, String> record =
+                    new ProducerRecord<>(Config.SETTING_THREADS_TOPIC, String.valueOf(i), "start_settings");
+
+            producer.send(record);
+        }
+
+        // get threads number from all the task managers
+        Map<Integer, Integer> threadsNumbersMap = new HashMap<>();
+        while(threadsNumbersMap.size() != this.tmNumber) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.of(100, ChronoUnit.MILLIS));
+            for (final ConsumerRecord<String, String> r : records) {
+                threadsNumbersMap.put(Integer.parseInt(r.key()), Integer.parseInt(r.value()));
+                System.out.println("JobManager: TaskManager " + r.key() + " has " + r.value() + " threads");
+            }
+        }
+        System.out.println("JobManager: threads number map " + threadsNumbersMap);
+
+
+        this.loadBalancer.setThreadsNumbersMap(threadsNumbersMap);
+        List<List<StreamProcessorProperties>> pipelines = createPipelines();
+        this.tmProcessors = this.loadBalancer.assignProcessors(pipelines, this.tmProcessors);
+        this.sendSerializedPipelines(this.tmProcessors);
+    }
+
     private void sendSerializedPipelines(List<List<StreamProcessorProperties>> processors) {
         JsonPropertiesSerializer serializer = new JsonPropertiesSerializer();
         KafkaProducer<String, String> producer = new KafkaProducer<>(Utils.getProducerProperties());
-        for (int i = 0; i < tmNumber; i++) {
 
+        System.out.println("JobManager: sending json serialized processors properties");
+
+        for (int i = 0; i < tmNumber; i++) {
             List<StreamProcessorProperties> processorsPropertiesForTM = processors.get(i);
 
             for (StreamProcessorProperties props : processorsPropertiesForTM) {
@@ -81,14 +117,15 @@ public class JobManager {
 
                 ProducerRecord<String, String> record =
                         new ProducerRecord<>(Config.SETTINGS_TOPIC + "_" + i, String.valueOf(i), jsonProperties);
-
                 producer.send(record);
             }
 
             ProducerRecord<String, String> record =
-                    new ProducerRecord<>(Config.SETTINGS_TOPIC + "_" + i, String.valueOf(i), "eos");
+                    new ProducerRecord<>(Config.SETTINGS_TOPIC + "_" + i, String.valueOf(i), "stop_settings");
             producer.send(record);
         }
+
+        System.out.println("JobManager: done settings");
     }
 
     private List<List<StreamProcessorProperties>> createPipelines() {
@@ -106,21 +143,6 @@ public class JobManager {
         List<List<StreamProcessorProperties>> processors = new ArrayList<>();
         for (int i = 0; i < this.tmNumber; i++) {
             processors.add(new ArrayList<>());
-        }
-        return processors;
-    }
-
-    private List<List<StreamProcessorProperties>> assignProcessors(List<List<StreamProcessorProperties>> pipelines,
-                                                         List<List<StreamProcessorProperties>> processors) {
-        // round robin assignment of operators to task managers
-        int tm_index = 0;
-        for(int i = 0; i < pipelines.get(0).size(); i++) {
-            for(int j = 0; j < pipelines.size(); j++) {
-                StreamProcessorProperties p = pipelines.get(j).get(i);
-                System.out.println("JobManager : assigning to TaskManager " + tm_index + " processor " + p);
-                processors.get(tm_index).add(p);
-                tm_index = (tm_index + 1) % tmNumber;
-            }
         }
         return processors;
     }

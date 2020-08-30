@@ -1,10 +1,13 @@
 package it.polimi.middleware.kafka_pipeline.threads.heartbeat;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
+import it.polimi.middleware.kafka_pipeline.common.TaskManagerIsDownException;
 import it.polimi.middleware.kafka_pipeline.common.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
+
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -24,8 +27,15 @@ public class HeartbeatController extends Thread {
             heartbeats.put(i, 0);
         }
 
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                System.out.println("Caught " + e);
+            }
+        });
+
         heartbeatConsumer = new KafkaConsumer<>(Utils.getConsumerProperties());
-        heartbeatConsumer.subscribe(Collections.singletonList(Config.HEARTBEAT_TOPIC));
+        heartbeatConsumer.assign(Collections.singleton(new TopicPartition(Config.HEARTBEAT_TOPIC, 0)));
     }
 
     @Override
@@ -34,8 +44,6 @@ public class HeartbeatController extends Thread {
         running = true;
 
         while(running) {
-
-            //System.out.println("HeartbeatController: heartbeat counters " + heartbeats);
 
             // update task managers counter
             for (int k : heartbeats.keySet()) {
@@ -46,15 +54,18 @@ public class HeartbeatController extends Thread {
             // update heartbeat for each task manager
             for (ConsumerRecord<String, String> record : records) {
                 heartbeats.put(Integer.parseInt(record.key()), 0);
-                //System.out.println(record.key());
+                System.out.println("HeartbeatController: received heartbeat from TaskManager " + record.key());
             }
 
             // check if task managers are alive
             for (int k : heartbeats.keySet()) {
-                if (heartbeats.get(k) == 3) {
-                    //System.out.println("HeartbeatController: TaskManager " + k + " is down");
+                if (heartbeats.get(k) == 5) {
+                    System.out.println("HeartbeatController: TaskManager " + k + " is down");
+                    throw new TaskManagerIsDownException(k); // throw exception with task manage's id
                 }
             }
+
+            System.out.println("HeartbeatController: heartbeat counters " + heartbeats);
         }
     }
 
