@@ -85,11 +85,23 @@ public class StreamProcessorProperties {
         return "Properties - PipelineID: " + getPipelineID() + " - ID: " + getID() + " - Type: " + getType() + " - InTopics: " + getInTopics() + " - OutTopics: " + getOutTopics() + " - State topic: " + getStateTopic();
     }
 
-    private void computeOutputTopics() {
+    /*private void computeOutputTopics() {
         for (String t : this.to) {
             String topic = TopicsManager.getOutputTopic(this.ID, t);
             this.outTopics.add(topic);
             System.out.println("Processor " + getID() + ": added output topic " + topic);
         }
+    }*/
+
+    @Override
+    public StreamProcessorProperties clone() {
+        StreamProcessorProperties p = new StreamProcessorProperties(this.pipelineID, this.ID, this.type);
+        for (String f : this.from) {
+            p.addInput(f);
+        }
+        for (String t : this.to) {
+            p.addOutput(t);
+        }
+        return p;
     }
 }

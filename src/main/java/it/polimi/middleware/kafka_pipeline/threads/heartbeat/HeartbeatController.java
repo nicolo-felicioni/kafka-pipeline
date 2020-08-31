@@ -6,6 +6,8 @@ import it.polimi.middleware.kafka_pipeline.common.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 
 import java.time.Duration;
@@ -27,12 +29,12 @@ public class HeartbeatController extends Thread {
             heartbeats.put(i, 0);
         }
 
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+        /*Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
                 System.out.println("Caught " + e);
             }
-        });
+        });*/
 
         heartbeatConsumer = new KafkaConsumer<>(Utils.getConsumerProperties());
         heartbeatConsumer.assign(Collections.singleton(new TopicPartition(Config.HEARTBEAT_TOPIC, 0)));
@@ -42,6 +44,8 @@ public class HeartbeatController extends Thread {
     public void run() {
 
         running = true;
+
+        KafkaProducer<String, String> producer = new KafkaProducer<>(Utils.getProducerProperties());
 
         while(running) {
 
@@ -59,9 +63,11 @@ public class HeartbeatController extends Thread {
 
             // check if task managers are alive
             for (int k : heartbeats.keySet()) {
-                if (heartbeats.get(k) == 5) {
+                if (heartbeats.get(k) == 3) {
                     System.out.println("HeartbeatController: TaskManager " + k + " is down");
-                    throw new TaskManagerIsDownException(k); // throw exception with task manage's id
+                    ProducerRecord<String, String> record =
+                            new ProducerRecord<>(Config.HEARTBEAT_EVENTS_TOPIC, String.valueOf(k), "down");
+                    producer.send(record);
                 }
             }
 
@@ -76,6 +82,5 @@ public class HeartbeatController extends Thread {
     @Override
     public void interrupt() {
         this.running = false;
-        this.interrupt();
     }
 }

@@ -55,12 +55,14 @@ public class TaskManager {
             ConsumerRecords<String, String> records = consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
             for (ConsumerRecord<String, String> r : records) {
                 if (Integer.parseInt(r.key()) == this.id && r.value().equals("start_settings")) {
-                    System.out.println("starting settings");
+                    System.out.println("Starting settings");
                     start = true;
                 }
             }
 
         } while(!start);
+
+        consumer.close();
     }
 
     public void sendThreadsNumber() {
@@ -72,6 +74,8 @@ public class TaskManager {
                 new ProducerRecord<>(Config.SETTING_THREADS_TOPIC, String.valueOf(this.id), String.valueOf(this.threadsNum));
 
         producer.send(record);
+
+        producer.close();
     }
 
     public void waitSerializedPipeline() {
@@ -144,11 +148,16 @@ public class TaskManager {
     }
 
     public void start() {
+        this.createThreads();
+        this.waitStartSettings();
+        this.sendThreadsNumber();
+        this.waitSerializedPipeline();
+
+        this.heartbeatThread.start();
         assignProcessors();
         for (PipelineThread t : threads) {
             t.start();
         }
-        this.heartbeatThread.start();
     }
 
     public void stop() {

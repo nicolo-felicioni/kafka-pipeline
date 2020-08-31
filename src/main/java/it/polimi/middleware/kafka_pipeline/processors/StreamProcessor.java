@@ -1,5 +1,6 @@
 package it.polimi.middleware.kafka_pipeline.processors;
 
+import it.polimi.middleware.kafka_pipeline.common.Config;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -34,10 +35,13 @@ public abstract class StreamProcessor {
         // TODO : temporary solution for transactional_id
         final String transactional_id = props.getID() + "_" + props.getPipelineID();
         this.producerProps.put("transactional.id", transactional_id);
+        this.producerProps.put("group.id", Config.PROCESSORS_CONSUMER_GROUP);
         //System.out.println(this.producerProps.getProperty("transactional.id"));
         System.out.println("Processor " + getId() + " : tansactional.id = " + transactional_id);
 
         this.consumerProps = consumerProps;
+        // same group for all the processors' consumers
+        this.consumerProps.put("group.id", Config.PROCESSORS_CONSUMER_GROUP);
 
         this.consumer = new KafkaConsumer<>(consumerProps);
         // Todo statically assign to partitions (maybe)
@@ -99,6 +103,7 @@ public abstract class StreamProcessor {
     public abstract void saveState(String record_key, String record_value);
 
     public void process(){
+
         ConsumerRecords<String, String> results;
 
         producer.beginTransaction();
@@ -109,8 +114,6 @@ public abstract class StreamProcessor {
         //get the results from the operation
         results = executeOperation(records);
 
-        //System.out.println(results.count());
-
         // for every result:
         //      write it in the outTopic
         //      save it in the stateTopic
@@ -119,13 +122,11 @@ public abstract class StreamProcessor {
 
             send(result_record.key(), result_record.value());
             saveState(result_record.key(),result_record.value());
-
         }
 
         // The producer manually commits the outputs for the
         // consumer within the transaction
         final Map<TopicPartition, OffsetAndMetadata> map = createPartitionOffsetMap(results);
-
         producer.sendOffsetsToTransaction(map, this.producerProps.getProperty("group.id"));
         producer.commitTransaction();
     }

@@ -16,16 +16,7 @@ public class MainTaskManager0 {
 
         Config.printConfiguration();
 
-        /*TopicsManager topicsManager = TopicsManager.getInstance();
-        topicsManager.createTopics(Collections.singletonList(Config.HEARTBEAT_TOPIC));
-        topicsManager.createTopics(Collections.singletonList(Config.SETTINGS_TOPIC));*/
-
-        TaskManager taskManager = new TaskManager(0, 2);
-        taskManager.createThreads();
-        taskManager.waitStartSettings();
-        taskManager.sendThreadsNumber();
-        taskManager.waitSerializedPipeline();
-        taskManager.start();
+        new TaskManager(0, 1).start();
 
     }
 }

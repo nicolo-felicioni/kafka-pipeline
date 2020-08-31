@@ -26,49 +26,77 @@ public class JobManager {
     private LoadBalancer loadBalancer;
     private int tmNumber;
     private int aliveTmNumber;
+    private Map<Integer,Boolean> aliveTaskManagers;
     private List<List<StreamProcessorProperties>> tmProcessors;
     private boolean running = false;
 
     public JobManager() {
         this.tmNumber = Config.TM_NUMBER;
-        this.aliveTmNumber = this.tmNumber;
+        this.aliveTmNumber = 0;
+        this.aliveTaskManagers = new HashMap<>();
 
         this.loadBalancer = new LoadBalancer();
-        this.tmProcessors = this.createTMProcessorsLists();
+        this.heartbeatController = new HeartbeatController(this.tmNumber);
+        this.tmProcessors = this.loadBalancer.createTMProcessorsLists(this.tmNumber);
     }
 
     public void start() {
 
+        this.createTopics();
+
         System.out.println("JobManager : starting heartbeat controller thread");
-        this.heartbeatController = new HeartbeatController(this.tmNumber);
         this.heartbeatController.start();
 
         this.setup();
-
-        running = true;
-
-        //this.sendStartSignal();
-
-        while (running) {
-            try {
-                if (this.aliveTmNumber == 0) {
-                    System.out.println("JobManager: no alive TaskManager exists");
-                    this.stop();
-                }
-            }
-            catch (TaskManagerIsDownException e) {
-                System.out.println(e.getMessage());
-                this.aliveTmNumber--;
-                this.tmProcessors = this.loadBalancer.rebalanceProcessors(e.getTaskManagerDownID(),
-                                                                            this.aliveTmNumber,
-                                                                            this.tmProcessors);
-            }
-        }
-
+        this.run();
     }
 
     public void stop() {
         running = false;
+        this.heartbeatController.interrupt();
+    }
+
+    private void run() {
+        running = true;
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
+        consumer.assign(Collections.singleton(new TopicPartition(Config.HEARTBEAT_EVENTS_TOPIC, 0)));
+
+        while (running) {
+
+            // records contain: <TaskManagerID, "down"/"up">
+            ConsumerRecords<String, String> records = consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
+            for (ConsumerRecord<String, String> r : records) {
+
+                if (r.value().equals("down")) {
+                    int taskManagerDownID = Integer.parseInt(r.key());
+                    this.aliveTaskManagers.put(taskManagerDownID, false);
+                    this.aliveTmNumber--;
+
+                    if (this.aliveTmNumber > 0) {
+                        System.out.println("JobManager: TaskManager " + r.key() + " is down");
+
+                        System.out.println(this.tmProcessors);
+
+                        List<List<StreamProcessorProperties>> toBeSentProcessors = this.loadBalancer.rebalanceProcessors(
+                                taskManagerDownID,
+                                this.aliveTaskManagers,
+                                this.tmNumber,
+                                this.tmProcessors);
+
+                        System.out.println(this.tmProcessors);
+                        System.out.println("to be sent: " + toBeSentProcessors);
+
+                        this.sendSerializedPipelines(toBeSentProcessors);
+                    }
+                }
+            }
+
+            if (this.aliveTmNumber == 0) {
+                System.out.println("JobManager: no alive TaskManager exists, stopping");
+                this.stop();
+            }
+        }
     }
 
     private void setup() {
@@ -91,16 +119,21 @@ public class JobManager {
             ConsumerRecords<String, String> records = consumer.poll(Duration.of(100, ChronoUnit.MILLIS));
             for (final ConsumerRecord<String, String> r : records) {
                 threadsNumbersMap.put(Integer.parseInt(r.key()), Integer.parseInt(r.value()));
+                this.aliveTaskManagers.put(Integer.parseInt(r.key()), true);
                 System.out.println("JobManager: TaskManager " + r.key() + " has " + r.value() + " threads");
             }
         }
         System.out.println("JobManager: threads number map " + threadsNumbersMap);
 
-
         this.loadBalancer.setThreadsNumbersMap(threadsNumbersMap);
+        this.aliveTmNumber = Collections.frequency(this.aliveTaskManagers.values(), true);
+        System.out.println("JobManager: number of alive TaskManagers is " + this.aliveTmNumber);
         List<List<StreamProcessorProperties>> pipelines = createPipelines();
         this.tmProcessors = this.loadBalancer.assignProcessors(pipelines, this.tmProcessors);
         this.sendSerializedPipelines(this.tmProcessors);
+
+        consumer.close();
+        producer.close();
     }
 
     private void sendSerializedPipelines(List<List<StreamProcessorProperties>> processors) {
@@ -109,23 +142,27 @@ public class JobManager {
 
         System.out.println("JobManager: sending json serialized processors properties");
 
-        for (int i = 0; i < tmNumber; i++) {
-            List<StreamProcessorProperties> processorsPropertiesForTM = processors.get(i);
+        for (int i = 0; i < this.tmNumber; i++) {
+            if (this.aliveTaskManagers.get(i)) { // if i-th task manager is alive
+                List<StreamProcessorProperties> processorsPropertiesForTM = processors.get(i);
 
-            for (StreamProcessorProperties props : processorsPropertiesForTM) {
-                String jsonProperties = serializer.serialize(props);
+                for (StreamProcessorProperties props : processorsPropertiesForTM) {
+                    String jsonProperties = serializer.serialize(props);
+
+                    ProducerRecord<String, String> record =
+                            new ProducerRecord<>(Config.SETTINGS_TOPIC + "_" + i, String.valueOf(i), jsonProperties);
+                    producer.send(record);
+                }
 
                 ProducerRecord<String, String> record =
-                        new ProducerRecord<>(Config.SETTINGS_TOPIC + "_" + i, String.valueOf(i), jsonProperties);
+                        new ProducerRecord<>(Config.SETTINGS_TOPIC + "_" + i, String.valueOf(i), "stop_settings");
                 producer.send(record);
             }
-
-            ProducerRecord<String, String> record =
-                    new ProducerRecord<>(Config.SETTINGS_TOPIC + "_" + i, String.valueOf(i), "stop_settings");
-            producer.send(record);
         }
 
         System.out.println("JobManager: done settings");
+
+        producer.close();
     }
 
     private List<List<StreamProcessorProperties>> createPipelines() {
@@ -138,12 +175,15 @@ public class JobManager {
         return pipelines;
     }
 
-    private List<List<StreamProcessorProperties>> createTMProcessorsLists() {
-        // create a list of processors for each task manager
-        List<List<StreamProcessorProperties>> processors = new ArrayList<>();
-        for (int i = 0; i < this.tmNumber; i++) {
-            processors.add(new ArrayList<>());
-        }
-        return processors;
+    private void createTopics() {
+        TopicsManager topicsManager = TopicsManager.getInstance();
+        List<String> topics = Parser.parseTopics();
+        topicsManager.setSourceTopic(Config.SOURCE_TOPIC);
+        topicsManager.setSinkTopic(Config.SINK_TOPIC);
+        topicsManager.createTopics(topics);
+        topicsManager.createTopics(Collections.singletonList(Config.HEARTBEAT_TOPIC));
+        topicsManager.createTopics(Collections.singletonList(Config.HEARTBEAT_EVENTS_TOPIC));
+        topicsManager.createTopics(Collections.singletonList(Config.SETTING_THREADS_TOPIC));
+        topicsManager.createTopics(Collections.singletonList(Config.SETTINGS_TOPIC));
     }
 }

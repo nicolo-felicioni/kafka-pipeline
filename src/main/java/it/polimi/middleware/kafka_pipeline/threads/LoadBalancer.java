@@ -40,21 +40,15 @@ public class LoadBalancer {
             }
         }
 
-        //System.out.println(allProcessorsList);
-
         int tm_index = 0;
         int curr_index = 0;
         int curr_threads_number;
         int tmNumber = threadsNumbersMap.size();
-        //boolean done = false;
 
         while(curr_index < allProcessorsList.size()) {
-
             curr_threads_number = threadsNumbersMap.get(tm_index);
-
             //System.out.println("curr_index: " + curr_index);
             //System.out.println("curr_threads_number: " + curr_threads_number);
-
             for(int i = 0; i < curr_threads_number && curr_index+i < allProcessorsList.size(); i++) {
                 //System.out.println("   curr_index + i: " + curr_index + i);
                 StreamProcessorProperties p = allProcessorsList.get(curr_index + i);
@@ -69,41 +63,42 @@ public class LoadBalancer {
         return assignedProcessors;
     }
 
-    public List<List<StreamProcessorProperties>> rebalanceProcessors(int taskManagerDownID, int aliveTmNumber,
+    public List<List<StreamProcessorProperties>> rebalanceProcessors(int taskManagerDownID,
+                                                                     Map<Integer,Boolean> aliveTaskManagers,
+                                                                     int tmNumber,
                                                                      List<List<StreamProcessorProperties>> processors) {
+
         List<StreamProcessorProperties> downTaskManagerProcessors = processors.get(taskManagerDownID);
-        List<List<StreamProcessorProperties>> reassignedProcessors = new ArrayList<>();
+        List<List<StreamProcessorProperties>> toBeSentProcessors = this.createTMProcessorsLists(tmNumber);
 
         // round robin re-assignment of operators to TaskManagers
         int tm_index = 0;
-        for (int i = 0; i < downTaskManagerProcessors.size(); i++) {
-            if (tm_index != taskManagerDownID) {
-                StreamProcessorProperties p = downTaskManagerProcessors.get(i);
+        int i = 0;
+        int toBeRemovedNumber = downTaskManagerProcessors.size();
+        while (i < toBeRemovedNumber) {
+            if (aliveTaskManagers.get(tm_index)) { // if TaskManager with id == tm_index is alive
+                StreamProcessorProperties p = downTaskManagerProcessors.remove(0);
                 // create copy of the i-th processor and assign to TaskManager tm_index
-                processors.get(tm_index).add(new StreamProcessorProperties(p.getPipelineID(), p.getID(), p.getType()));
+                // also create a new list of lists containing only the objects to be sent to alive TaskManagers
+                processors.get(tm_index).add(p.clone());
+                toBeSentProcessors.get(tm_index).add(p.clone());
+                // move to the next processor (only if allocated to another task manager)
+                i++;
             }
-            tm_index = (tm_index + 1) % aliveTmNumber;
+
+            // move to the next task manager
+            tm_index = (tm_index + 1) % tmNumber;
         }
 
-        for (int i = 0; i < downTaskManagerProcessors.size(); i++) {
-            downTaskManagerProcessors.remove(0);
-        }
-
-        // TODO : maybe better to create a new list of lists and send only "new" processors to alive task managers
-
-        return reassignedProcessors;
+        return toBeSentProcessors;
     }
 
-    /*
-    private List<List<StreamProcessorProperties>> reassignProcessors(int taskManagerDownID) {
-        List<StreamProcessorProperties> downTaskManagerProcessors = this.tmProcessors.get(taskManagerDownID);
-        List<List<StreamProcessorProperties>> reassignedProcessors = new ArrayList<>();
-        for (int i = 0; i < this.aliveTmNumber; i++) {
-            List<StreamProcessorProperties> p = new ArrayList<>();
-            reassignedProcessors.add(p);
+    public List<List<StreamProcessorProperties>> createTMProcessorsLists(int num) {
+        // create a list of processors for each task manager
+        List<List<StreamProcessorProperties>> processors = new ArrayList<>();
+        for (int i = 0; i < num; i++) {
+            processors.add(new ArrayList<>());
         }
-
-        return reassignedProcessors;
+        return processors;
     }
-     */
 }
