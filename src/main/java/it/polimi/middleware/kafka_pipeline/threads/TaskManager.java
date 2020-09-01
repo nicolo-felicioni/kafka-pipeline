@@ -26,6 +26,8 @@ public class TaskManager {
     private List<StreamProcessor> processors;
     private List<PipelineThread> threads;
     private Heartbeat heartbeatThread;
+    KafkaConsumer<String, String> settings_consumer;
+    private boolean running = false;
 
     public TaskManager(int id, int threadsNum) {
         this.id = id;
@@ -33,15 +35,17 @@ public class TaskManager {
         System.out.println("Available threads number: " + this.threadsNum);
         this.processors = new ArrayList<>();
         this.threads = new ArrayList<>();
+
+        this.settings_consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
+        settings_consumer.assign(Collections.singleton(new TopicPartition(Config.SETTINGS_TOPIC + "_" + this.id, 0)));
+
     }
 
     /**
      * Create threads, assign them to tasks and start executing them.
      */
     public void createThreads() {
-
         this.heartbeatThread = new Heartbeat(this.id);
-
         for (int i = 0; i < threadsNum; i++)
             threads.add(new PipelineThread(i, this.id));
     }
@@ -78,21 +82,18 @@ public class TaskManager {
         producer.close();
     }
 
-    public void waitSerializedPipeline() {
+    public List<StreamProcessor> waitSerializedPipeline() {
         List<StreamProcessorProperties> processorProperties = receiveProcessorsProperties();
-        createProcessors(processorProperties);
+        return createProcessors(processorProperties);
     }
 
     private List<StreamProcessorProperties> receiveProcessorsProperties() {
         JsonPropertiesSerializer serializer = new JsonPropertiesSerializer();
         List<StreamProcessorProperties> processorsProperties = new ArrayList<>();
 
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
-        consumer.assign(Collections.singleton(new TopicPartition(Config.SETTINGS_TOPIC + "_" + this.id, 0)));
-
         boolean stop = false;
         do {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
+            ConsumerRecords<String, String> records = settings_consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
             for (ConsumerRecord<String, String> r : records) {
                 if (Integer.parseInt(r.key()) == this.id) {
                     if (r.value().equals("stop_settings")) {
@@ -128,18 +129,21 @@ public class TaskManager {
         } while(!start);
     }*/
 
-    private void createProcessors(List<StreamProcessorProperties> properties) {
+    private List<StreamProcessor> createProcessors(List<StreamProcessorProperties> properties) {
+        List<StreamProcessor> processorsList = new ArrayList<>();
         for (StreamProcessorProperties props : properties) {
-            this.processors.add(Utils.getProcessorByType(props));
+            processorsList.add(Utils.getProcessorByType(props));
         }
-        System.out.println("Processors: " + this.processors);
+        System.out.println("Created processors: " + processorsList);
+        return processorsList;
     }
 
-    private void assignProcessors() {
+    private void assignProcessors(List<StreamProcessor> processorsList) {
         // round robin assignment of processors to threads
         int thread_index = 0;
-        for(int i = 0; i < processors.size(); i++) {
-            StreamProcessor p = processors.get(i);
+        for(int i = 0; i < processorsList.size(); i++) {
+            StreamProcessor p = processorsList.get(i);
+            this.processors.add(p);
             System.out.println(p.getProperties());
             System.out.println("TaskManager " + id + " : assigning to Thread " + thread_index + " processor " + p);
             threads.get(thread_index).assign(p);
@@ -151,12 +155,29 @@ public class TaskManager {
         this.createThreads();
         this.waitStartSettings();
         this.sendThreadsNumber();
-        this.waitSerializedPipeline();
+        List<StreamProcessor> processorsList = this.waitSerializedPipeline();
 
         this.heartbeatThread.start();
-        assignProcessors();
+        this.assignProcessors(processorsList);
+
+        System.out.println("task manager processors: " + this.processors);
+
         for (PipelineThread t : threads) {
             t.start();
+        }
+
+        this.run();
+    }
+
+    private void run() {
+        this.running = true;
+
+        while(this.running) {
+            List<StreamProcessor> newProcessors = waitSerializedPipeline();
+            this.assignProcessors(newProcessors);
+
+            //System.out.println("task manager processors: " + this.processors);
+            //System.out.println("thread processors: " + threads.get(0).getProcessors());
         }
     }
 
@@ -164,6 +185,7 @@ public class TaskManager {
         for (PipelineThread t : threads)
             t.interrupt();
         this.heartbeatThread.interrupt();
+        this.running = false;
 
     }
 

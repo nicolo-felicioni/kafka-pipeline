@@ -4,12 +4,17 @@ import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class PipelineThread extends Thread {
 
     private String id;
     private List<StreamProcessor> processors;
-    private Boolean running;
+    private boolean running = false;
+    private final Lock lock = new ReentrantLock();
 
     public PipelineThread(int id, int taskManagerId) {
         this.id = taskManagerId + "." + id;
@@ -24,14 +29,10 @@ public class PipelineThread extends Thread {
         running = true;
 
         while(running) {
-            for(StreamProcessor p : processors) {
-                System.out.println("Thread " + id + " - Running processor " + p.getId());
-                p.process();
-
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            synchronized (lock) {
+                for (StreamProcessor p : processors) {
+                    System.out.println("Thread " + id + " - Running processor " + p.getId());
+                    p.process();
                 }
             }
         }
@@ -41,8 +42,14 @@ public class PipelineThread extends Thread {
 
     public int getProcessorsNumber() { return processors.size(); }
 
+    public List<StreamProcessor> getProcessors() { return processors; }
+
     public void assign(StreamProcessor p) {
-        processors.add(p);
+        synchronized (lock) {
+            //System.out.println(processors);
+            processors.add(p);
+            //System.out.println(processors);
+        }
     }
 
     @Override
