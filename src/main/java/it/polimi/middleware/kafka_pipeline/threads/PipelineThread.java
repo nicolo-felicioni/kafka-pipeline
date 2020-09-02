@@ -5,9 +5,7 @@ import it.polimi.middleware.kafka_pipeline.processors.StreamProcessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class PipelineThread extends Thread {
 
@@ -46,9 +44,7 @@ public class PipelineThread extends Thread {
 
     public void assign(StreamProcessor p) {
         synchronized (lock) {
-            //System.out.println(processors);
             processors.add(p);
-            //System.out.println(processors);
         }
     }
 
@@ -56,8 +52,6 @@ public class PipelineThread extends Thread {
     public void interrupt() {
         for(StreamProcessor p : processors)
             p.stop();
-
         this.running = false;
-        //this.interrupt();
     }
 }

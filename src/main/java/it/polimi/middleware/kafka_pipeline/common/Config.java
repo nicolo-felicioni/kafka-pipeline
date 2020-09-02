@@ -22,10 +22,11 @@ public class Config {
     public static final String SOURCE_KEYWORD = "source";
     public static final String SINK_KEYWORD = "sink";
 
-    public static final String HEARTBEAT_TOPIC = "heartbeat_topic";
-    public static final String HEARTBEAT_EVENTS_TOPIC = "heartbeat_events_topic";
-    public static final String SETTING_THREADS_TOPIC = "settings_threads_topic";
-    public static final String SETTINGS_TOPIC = "settings_topic";
+    public static final String HEARTBEAT_TOPIC = "heartbeat_topic"; // unidirectional TaskManager -> JobManager
+    public static final String HEARTBEAT_EVENTS_TOPIC = "heartbeat_events_topic"; // HeartbeatController -> JobManager
+    public static final String THREADS_TM_TOPIC = "threads_tm_topic"; // unidirectional TaskManager -> JobManager
+    public static final String THREADS_JM_TOPIC = "threads_jm_topic"; // unidirectional JobManager -> TaskManager
+    public static final String PROCESSORS_TOPIC = "processors_topic"; // unidirectional JobManager -> TaskManager
 
     public static void printConfiguration(){
         System.out.println("\n----------   CONFIG   ----------");

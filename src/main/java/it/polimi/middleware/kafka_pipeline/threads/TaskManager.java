@@ -26,7 +26,7 @@ public class TaskManager {
     private List<StreamProcessor> processors;
     private List<PipelineThread> threads;
     private Heartbeat heartbeatThread;
-    KafkaConsumer<String, String> settings_consumer;
+    KafkaConsumer<String, String> processorsConsumer;
     private boolean running = false;
 
     public TaskManager(int id, int threadsNum) {
@@ -36,8 +36,9 @@ public class TaskManager {
         this.processors = new ArrayList<>();
         this.threads = new ArrayList<>();
 
-        this.settings_consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
-        settings_consumer.assign(Collections.singleton(new TopicPartition(Config.SETTINGS_TOPIC + "_" + this.id, 0)));
+        this.processorsConsumer = new KafkaConsumer<>(Utils.getConsumerProperties());
+        processorsConsumer.assign(Collections.singleton(
+                new TopicPartition(Config.PROCESSORS_TOPIC + "_" + this.id, 0)));
 
     }
 
@@ -53,12 +54,12 @@ public class TaskManager {
     public void waitStartSettings() {
         System.out.println("Waiting for JobManager to start setting up the pipeline");
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
-        consumer.assign(Collections.singleton(new TopicPartition(Config.SETTING_THREADS_TOPIC, 0)));
+        consumer.assign(Collections.singleton(new TopicPartition(Config.THREADS_JM_TOPIC, 0)));
         boolean start = false;
         do {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
+            ConsumerRecords<String, String> records = consumer.poll(Duration.of(500, ChronoUnit.MILLIS));
             for (ConsumerRecord<String, String> r : records) {
-                if (Integer.parseInt(r.key()) == this.id && r.value().equals("start_settings")) {
+                if (Integer.parseInt(r.key()) == this.id && r.value().equals("sos")) {
                     System.out.println("Starting settings");
                     start = true;
                 }
@@ -75,7 +76,7 @@ public class TaskManager {
         System.out.println("Sending available threads number");
 
         ProducerRecord<String, String> record =
-                new ProducerRecord<>(Config.SETTING_THREADS_TOPIC, String.valueOf(this.id), String.valueOf(this.threadsNum));
+                new ProducerRecord<>(Config.THREADS_TM_TOPIC, String.valueOf(this.id), String.valueOf(this.threadsNum));
 
         producer.send(record);
 
@@ -93,10 +94,10 @@ public class TaskManager {
 
         boolean stop = false;
         do {
-            ConsumerRecords<String, String> records = settings_consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
+            ConsumerRecords<String, String> records = processorsConsumer.poll(Duration.of(1, ChronoUnit.SECONDS));
             for (ConsumerRecord<String, String> r : records) {
                 if (Integer.parseInt(r.key()) == this.id) {
-                    if (r.value().equals("stop_settings")) {
+                    if (r.value().equals("eos")) {
                         stop = true;
                     }
                     else {
@@ -115,20 +116,6 @@ public class TaskManager {
         return processorsProperties;
     }
 
-    /*public void waitStartSignal() {
-        boolean start = false;
-        do {
-            ConsumerRecords<String, String> records = settings_consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
-            for (ConsumerRecord<String, String> r : records) {
-                if (Integer.parseInt(r.key()) == this.id && r.value().equals("start")) {
-                    System.out.println("starting");
-                    start = true;
-                }
-            }
-
-        } while(!start);
-    }*/
-
     private List<StreamProcessor> createProcessors(List<StreamProcessorProperties> properties) {
         List<StreamProcessor> processorsList = new ArrayList<>();
         for (StreamProcessorProperties props : properties) {
@@ -144,7 +131,7 @@ public class TaskManager {
         for(int i = 0; i < processorsList.size(); i++) {
             StreamProcessor p = processorsList.get(i);
             this.processors.add(p);
-            System.out.println(p.getProperties());
+            //System.out.println(p.getProperties());
             System.out.println("TaskManager " + id + " : assigning to Thread " + thread_index + " processor " + p);
             threads.get(thread_index).assign(p);
             thread_index = (thread_index + 1) % threadsNum;
@@ -160,7 +147,7 @@ public class TaskManager {
         this.heartbeatThread.start();
         this.assignProcessors(processorsList);
 
-        System.out.println("task manager processors: " + this.processors);
+        //System.out.println("task manager processors: " + this.processors);
 
         for (PipelineThread t : threads) {
             t.start();

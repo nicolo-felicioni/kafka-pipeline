@@ -31,17 +31,15 @@ public abstract class StreamProcessor {
         this.props = props;
 
         this.producerProps = producerProps;
-
         // TODO : temporary solution for transactional_id
         final String transactional_id = props.getID() + "_" + props.getPipelineID();
         this.producerProps.put("transactional.id", transactional_id);
-        this.producerProps.put("group.id", Config.PROCESSORS_CONSUMER_GROUP);
-        //System.out.println(this.producerProps.getProperty("transactional.id"));
-        System.out.println("Processor " + getId() + " : tansactional.id = " + transactional_id);
+        this.producerProps.put("group.id", Config.PROCESSORS_CONSUMER_GROUP); // same group for all the processors
+        System.out.println("Processor " + getId() + " : tansactional.id = "
+                + this.producerProps.getProperty("transactional.id"));
 
         this.consumerProps = consumerProps;
-        // same group for all the processors' consumers
-        this.consumerProps.put("group.id", Config.PROCESSORS_CONSUMER_GROUP);
+        this.consumerProps.put("group.id", Config.PROCESSORS_CONSUMER_GROUP); // same group for all the processors
 
         this.consumer = new KafkaConsumer<>(consumerProps);
         // Todo statically assign to partitions (maybe)
@@ -84,7 +82,7 @@ public abstract class StreamProcessor {
     }
 
     synchronized public ConsumerRecords<String, String> receive() {
-        return consumer.poll(Duration.of(1, ChronoUnit.SECONDS));
+        return consumer.poll(Duration.of(500, ChronoUnit.MILLIS));
     }
 
     // this function sends the k,v pair to the output topic
@@ -93,7 +91,9 @@ public abstract class StreamProcessor {
             ProducerRecord<String, String> record =
                     new ProducerRecord<>(topic, record_key, record_value);
 
-            System.out.println("ID: " + this.getId() + " " + props.getPipelineID() + " - Transaction_ID: " + this.producerProps.getProperty("transactional.id") + " - Produced: topic:" + record.topic() + " - key:" + record.key() + " - value:" + record.value());
+            System.out.println("ID: " + this.getId() + " " + props.getPipelineID() + " - Transaction_ID: " +
+                    this.producerProps.getProperty("transactional.id") + " - Produced on topic:" + record.topic() +
+                    " - key:" + record.key() + " - value:" + record.value());
 
             producer.send(record);
         }
@@ -102,7 +102,7 @@ public abstract class StreamProcessor {
     // abstract function to be implemented by stateful processors
     public abstract void saveState(String record_key, String record_value);
 
-    public void process(){
+    public void process() {
 
         ConsumerRecords<String, String> results;
 
@@ -118,7 +118,9 @@ public abstract class StreamProcessor {
         //      write it in the outTopic
         //      save it in the stateTopic
         for (final ConsumerRecord<String, String> result_record : results) {
-            System.out.println("ID: " + this.getId() + " " + props.getPipelineID() + " - Consumed: topic:" + result_record.topic() + " - key:" + result_record.key() + " - value:" + result_record.value());
+            System.out.println("ID: " + this.getId() + " " + props.getPipelineID() +
+                    " - Consumed from topic:" + result_record.topic() + " - key:" + result_record.key() +
+                    " - value:" + result_record.value());
 
             send(result_record.key(), result_record.value());
             saveState(result_record.key(),result_record.value());
