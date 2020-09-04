@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
+import org.apache.kafka.clients.consumer.RoundRobinAssignor;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -27,6 +28,7 @@ public class Producer {
         props.put("bootstrap.servers", "localhost:9092");
         props.put("key.serializer", StringSerializer.class.getName());
         props.put("value.serializer", StringSerializer.class.getName());
+        //props.put("partition.assignment.strategy", RoundRobinAssignor.class.getName());
         // Idempotence = exactly once semantics between producer and partition
         props.put("enable.idempotence", true);
 
@@ -35,7 +37,7 @@ public class Producer {
 
         for (int i = 0; i < numMessages; i++) {
             final String topic = topics.get(r.nextInt(topics.size()));
-            final String key = "Key" + r.nextInt(1000);
+            final String key = String.valueOf(r.nextInt(5));
             final String value = String.valueOf(i);
             if (print) {
                 System.out.println("Topic: " + topic + "\t" + //

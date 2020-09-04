@@ -16,7 +16,7 @@ public class MainTaskManager0 {
 
         Config.printConfiguration();
 
-        new TaskManager(0, 1).start();
+        new TaskManager(0, 2).start();
 
     }
 }

@@ -2,7 +2,6 @@ package it.polimi.middleware.kafka_pipeline.threads;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
 import it.polimi.middleware.kafka_pipeline.common.JsonPropertiesSerializer;
-import it.polimi.middleware.kafka_pipeline.common.TaskManagerIsDownException;
 import it.polimi.middleware.kafka_pipeline.common.Utils;
 import it.polimi.middleware.kafka_pipeline.parser.Parser;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessorProperties;
@@ -15,7 +14,6 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 
-import java.sql.SQLOutput;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;

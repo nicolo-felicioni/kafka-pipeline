@@ -1,6 +1,7 @@
 package it.polimi.middleware.kafka_pipeline.common;
 
 import it.polimi.middleware.kafka_pipeline.processors.*;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.RoundRobinAssignor;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;

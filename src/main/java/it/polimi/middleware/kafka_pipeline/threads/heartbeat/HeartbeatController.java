@@ -1,7 +1,6 @@
 package it.polimi.middleware.kafka_pipeline.threads.heartbeat;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
-import it.polimi.middleware.kafka_pipeline.common.TaskManagerIsDownException;
 import it.polimi.middleware.kafka_pipeline.common.Utils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -63,7 +62,7 @@ public class HeartbeatController extends Thread {
 
             // check if task managers are alive
             for (int k : heartbeats.keySet()) {
-                if (heartbeats.get(k) == 3) {
+                if (heartbeats.get(k) == 5) {
                     System.out.println("HeartbeatController: TaskManager " + k + " is down");
                     ProducerRecord<String, String> record =
                             new ProducerRecord<>(Config.HEARTBEAT_EVENTS_TOPIC, String.valueOf(k), "down");

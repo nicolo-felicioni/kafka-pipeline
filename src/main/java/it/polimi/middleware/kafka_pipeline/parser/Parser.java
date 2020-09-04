@@ -4,12 +4,11 @@ import it.polimi.middleware.kafka_pipeline.common.Config;
 import it.polimi.middleware.kafka_pipeline.common.ProcessorType;
 import it.polimi.middleware.kafka_pipeline.common.Utils;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessorProperties;
-import it.polimi.middleware.kafka_pipeline.processors.Sum;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
-import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * Parser for Yaml configuration files

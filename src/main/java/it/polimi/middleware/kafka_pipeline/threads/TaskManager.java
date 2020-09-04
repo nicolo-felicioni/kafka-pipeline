@@ -32,6 +32,7 @@ public class TaskManager {
     public TaskManager(int id, int threadsNum) {
         this.id = id;
         this.threadsNum = threadsNum;
+        System.out.println("TaskManager " + this.id);
         System.out.println("Available threads number: " + this.threadsNum);
         this.processors = new ArrayList<>();
         this.threads = new ArrayList<>();

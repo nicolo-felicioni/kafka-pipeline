@@ -1,4 +1,4 @@
-package it.polimi.middleware.kafka_pipeline.common;
+package it.polimi.middleware.kafka_pipeline.unused;
 
 public class TaskManagerIsDownException extends RuntimeException {
 

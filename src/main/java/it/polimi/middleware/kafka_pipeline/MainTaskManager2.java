@@ -1,11 +1,10 @@
 package it.polimi.middleware.kafka_pipeline;
 
-import com.google.gson.Gson;
 import it.polimi.middleware.kafka_pipeline.common.Config;
 import it.polimi.middleware.kafka_pipeline.parser.Parser;
 import it.polimi.middleware.kafka_pipeline.threads.TaskManager;
 
-public class MainTaskManager1 {
+public class MainTaskManager2 {
 
     public static void main(String[] args) {
 
@@ -15,7 +14,7 @@ public class MainTaskManager1 {
 
         Config.printConfiguration();
 
-        new TaskManager(1, 2).start();
+        new TaskManager(2, 1).start();
 
     }
 }
