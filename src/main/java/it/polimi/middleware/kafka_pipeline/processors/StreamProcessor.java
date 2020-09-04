@@ -78,7 +78,7 @@ public abstract class StreamProcessor {
     }
 
     // strategy method
-    public abstract ConsumerRecords<String, String> executeOperation(ConsumerRecords<String, String> records);
+    public abstract List<ProducerRecord<String, String>> executeOperation(ConsumerRecords<String, String> records);
 
     public void stop() {
         consumer.close();
@@ -104,11 +104,12 @@ public abstract class StreamProcessor {
     }
 
     // abstract function to be implemented by stateful processors
-    public abstract void saveState(String record_key, String record_value);
+    public abstract void saveState();
 
     public void process() {
 
-        ConsumerRecords<String, String> results;
+        List<ProducerRecord<String, String>> results;
+
 
         producer.beginTransaction();
 
@@ -121,18 +122,19 @@ public abstract class StreamProcessor {
         // for every result:
         //      write it in the outTopic
         //      save it in the stateTopic
-        for (final ConsumerRecord<String, String> result_record : results) {
+        for (final ProducerRecord<String, String> result_record : results) {
             System.out.println("ID: " + this.getId() + " " + props.getPipelineID() +
                     " - Consumed from topic:" + result_record.topic() + " - key:" + result_record.key() +
                     " - value:" + result_record.value());
 
             send(result_record.key(), result_record.value());
-            saveState(result_record.key(),result_record.value());
         }
+
+        saveState();
 
         // The producer manually commits the outputs for the
         // consumer within the transaction
-        final Map<TopicPartition, OffsetAndMetadata> map = createPartitionOffsetMap(results);
+        final Map<TopicPartition, OffsetAndMetadata> map = createPartitionOffsetMap(records);
         producer.sendOffsetsToTransaction(map, this.producerProps.getProperty("group.id"));
         producer.commitTransaction();
     }

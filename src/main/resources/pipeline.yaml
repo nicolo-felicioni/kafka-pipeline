@@ -4,16 +4,16 @@
 # SOURCE PROCESSOR
 - id: "source_id"
   type: "forward"
-  to: ["sink_id"]
+  to: ["nodo_1", "nodo_2"]
 
 # INTERMEDIATE PROCESSORS
-#- id: "nodo_1"
-#  type: "sum"
-#  to: ["sink_id"]
+- id: "nodo_1"
+  type: "sum"
+  to: ["sink_id"]
 
-#- id: "nodo_2"
-#  type: "count"
-#  to: ["sink_id"]
+- id: "nodo_2"
+  type: "count"
+  to: ["sink_id"]
 
 # SINK NODE
 - id: "sink_id"
