@@ -52,6 +52,9 @@ public class TaskManager {
             threads.add(new PipelineThread(i, this.id));
     }
 
+    /**
+     * Wait for the JobManager to start the pipeline setup at the beginning.
+     */
     public void waitStartSettings() {
         System.out.println("Waiting for JobManager to start setting up the pipeline");
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
@@ -71,6 +74,9 @@ public class TaskManager {
         consumer.close();
     }
 
+    /**
+     * Send the number of available threads to the JobManager.
+     */
     public void sendThreadsNumber() {
         KafkaProducer<String, String> producer = new KafkaProducer<>(Utils.getProducerProperties());
 
@@ -84,11 +90,20 @@ public class TaskManager {
         producer.close();
     }
 
+    /**
+     * Wait for the JobManager to send processors.
+     * @return list of processors to be executed by this TaskManager
+     */
     public List<StreamProcessor> waitSerializedPipeline() {
         List<StreamProcessorProperties> processorProperties = receiveProcessorsProperties();
         return createProcessors(processorProperties);
     }
 
+    /**
+     * Receive from the JobManager the set of properties corresponding to
+     * the processors that have to be executed by this TaskManager.
+     * @return list of processors properties for this TaskManager
+     */
     private List<StreamProcessorProperties> receiveProcessorsProperties() {
         JsonPropertiesSerializer serializer = new JsonPropertiesSerializer();
         List<StreamProcessorProperties> processorsProperties = new ArrayList<>();
@@ -117,6 +132,11 @@ public class TaskManager {
         return processorsProperties;
     }
 
+    /**
+     * Instantiate processors objects starting from their properties.
+     * @param properties properties of the TaskManager's processors
+     * @return list of processors to be executed by this TaskManager
+     */
     private List<StreamProcessor> createProcessors(List<StreamProcessorProperties> properties) {
         List<StreamProcessor> processorsList = new ArrayList<>();
         for (StreamProcessorProperties props : properties) {
@@ -126,6 +146,10 @@ public class TaskManager {
         return processorsList;
     }
 
+    /**
+     * Assign processors to threads.
+     * @param processorsList list of processors to be distributed among threads.
+     */
     private void assignProcessors(List<StreamProcessor> processorsList) {
         // round robin assignment of processors to threads
         int thread_index = 0;
@@ -139,6 +163,9 @@ public class TaskManager {
         }
     }
 
+    /**
+     * Start the TaskManager.
+     */
     public void start() {
         this.createThreads();
         this.waitStartSettings();
@@ -157,6 +184,12 @@ public class TaskManager {
         this.run();
     }
 
+    /**
+     * Run the TaskManager.
+     * It will loop and wait for new messages coming from
+     * the JobManager in case some processors have to be
+     * re-distributed.
+     */
     private void run() {
         this.running = true;
 
@@ -169,6 +202,9 @@ public class TaskManager {
         }
     }
 
+    /**
+     * Interrupt the TaskManager execution.
+     */
     public void stop() {
         for (PipelineThread t : threads)
             t.interrupt();
@@ -177,6 +213,9 @@ public class TaskManager {
 
     }
 
+    /**
+     * @return TaskManager's identifier.
+     */
     public int getId() {
         return this.id;
     }

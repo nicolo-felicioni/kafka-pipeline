@@ -19,6 +19,9 @@ public class PipelineThread extends Thread {
         this.processors = new ArrayList<>();
     }
 
+    /**
+     * Execute the threads and its processors.
+     */
     @Override
     public void run() {
 
@@ -36,10 +39,19 @@ public class PipelineThread extends Thread {
         }
     }
 
+    /**
+     * @return the threads identifier.
+     */
     public String getID() { return this.id; }
 
+    /**
+     * @return the number of processors assigned to this thread.
+     */
     public int getProcessorsNumber() { return processors.size(); }
 
+    /**
+     * @return
+     */
     public List<StreamProcessor> getProcessors() { return processors; }
 
     public void assign(StreamProcessor p) {

@@ -37,7 +37,7 @@ public class Producer {
 
         for (int i = 0; i < numMessages; i++) {
             final String topic = topics.get(r.nextInt(topics.size()));
-            final String key = String.valueOf(r.nextInt(5));
+            final String key = String.valueOf(r.nextInt(100));
             final String value = String.valueOf(i);
             if (print) {
                 System.out.println("Topic: " + topic + "\t" + //

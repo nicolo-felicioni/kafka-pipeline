@@ -28,14 +28,12 @@ public class Heartbeat extends Thread {
             e.printStackTrace();
         }
 
+        ProducerRecord<String, String> pingRecord =
+                new ProducerRecord<>(Config.HEARTBEAT_TOPIC,
+                        String.valueOf(this.taskManagerID), "ping");
+
         while(running) {
-            ProducerRecord<String, String> record =
-                    new ProducerRecord<>(Config.HEARTBEAT_TOPIC,
-                                            String.valueOf(this.taskManagerID), "ping");
-
-            //System.out.println("TaskManager " + record.key() + ": produced heartbeat");
-
-            heartbeatProducer.send(record);
+            heartbeatProducer.send(pingRecord);
 
             try {
                 Thread.sleep(1000);

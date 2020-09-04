@@ -6,11 +6,9 @@
 - job_name: "job_1"
 
 # number of task managers to connect to
-- tm_number: 1
+- tm_number: 2
 # number of copies of the pipeline
-- parallelism: 1
-# number of partitions in each topic
-- num_topics_partitions: 1
+- parallelism: 2
 # kafka topics replication factor
 - replication_factor: 1
 

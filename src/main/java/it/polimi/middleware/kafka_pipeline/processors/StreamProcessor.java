@@ -44,9 +44,11 @@ public abstract class StreamProcessor {
         this.consumer = new KafkaConsumer<>(consumerProps);
         // Todo statically assign to partitions (maybe)
         //this.consumer.subscribe(props.getInTopics());
+        List<TopicPartition> topicPartitions = new ArrayList<>();
         for (String topicName : props.getInTopics()) {
-            consumer.assign(Collections.singleton(new TopicPartition(topicName, this.props.getPipelineID())));
+            topicPartitions.add(new TopicPartition(topicName, this.props.getPipelineID()));
         }
+        consumer.assign(topicPartitions);
 
         this.producer = new KafkaProducer<>(this.producerProps);
 
@@ -118,6 +120,7 @@ public abstract class StreamProcessor {
 
         //get the results from the operation
         results = executeOperation(records);
+
 
         // for every result:
         //      write it in the outTopic

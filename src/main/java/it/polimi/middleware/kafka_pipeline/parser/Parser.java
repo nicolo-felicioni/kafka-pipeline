@@ -33,10 +33,10 @@ public class Parser {
         Config.PROCESSORS_CONSUMER_GROUP = "processors_" + Config.JOB_NAME;
         Config.TM_NUMBER = yaml_config.get(3).get("tm_number");
         Config.PARALLELISM = yaml_config.get(4).get("parallelism");
-        Config.NUM_TOPICS_PARTITIONS = yaml_config.get(5).get("num_topics_partitions");
-        Config.REPLICATION_FACTOR = yaml_config.get(6).get("replication_factor").shortValue();
-        Config.SOURCE_TOPIC = String.valueOf(yaml_config.get(7).get("source_topic"));
-        Config.SINK_TOPIC = String.valueOf(yaml_config.get(8).get("sink_topic"));
+        //Config.NUM_TOPICS_PARTITIONS = yaml_config.get(5).get("num_topics_partitions");
+        Config.REPLICATION_FACTOR = yaml_config.get(5).get("replication_factor").shortValue();
+        Config.SOURCE_TOPIC = String.valueOf(yaml_config.get(6).get("source_topic"));
+        Config.SINK_TOPIC = String.valueOf(yaml_config.get(7).get("sink_topic"));
         return config;
     }
 

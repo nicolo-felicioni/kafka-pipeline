@@ -37,21 +37,30 @@ public class JobManager {
         this.tmProcessors = this.loadBalancer.createTMProcessorsLists(this.tmNumber);
     }
 
+    /**
+     * Create useful topics and start the JobManager.
+     */
     public void start() {
         this.createTopics();
-
         System.out.println("JobManager : starting heartbeat controller thread");
         this.heartbeatController.start();
-
         this.setup();
         this.run();
     }
 
+    /**
+     * Interrupt the JobManager execution.
+     */
     public void stop() {
         running = false;
         this.heartbeatController.interrupt();
     }
 
+    /**
+     * Run the JobManager until stop() is called.
+     * Loop in order to handle TaskManagers failure and
+     * to rebalance the processors assignment.
+     */
     private void run() {
         running = true;
 
@@ -91,6 +100,10 @@ public class JobManager {
         }
     }
 
+    /**
+     * Setup the communication with TaskManagers.
+     * Receive their number of threads and send them their processors.
+     */
     private void setup() {
         KafkaProducer<String, String> producer = new KafkaProducer<>(Utils.getProducerProperties());
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(Utils.getConsumerProperties());
@@ -128,6 +141,10 @@ public class JobManager {
         producer.close();
     }
 
+    /**
+     * Send processors to TaskManagers after serializing them in Json format.
+     * @param processors list containing a list of processors for each TaskManager
+     */
     private void sendSerializedPipelines(List<List<StreamProcessorProperties>> processors) {
         JsonPropertiesSerializer serializer = new JsonPropertiesSerializer();
         KafkaProducer<String, String> producer = new KafkaProducer<>(Utils.getProducerProperties());
@@ -157,6 +174,10 @@ public class JobManager {
         producer.close();
     }
 
+    /**
+     * Parse the pipeline and create N copies, where N is the parallelism.
+     * @return list of identical lists of processors
+     */
     private List<List<StreamProcessorProperties>> createPipelines() {
         // create some pipelines, according to the PARALLELISM parameter
         List<List<StreamProcessorProperties>> pipelines = new ArrayList<>();
@@ -167,6 +188,9 @@ public class JobManager {
         return pipelines;
     }
 
+    /**
+     * Create topics needed by JobManager, TaskManager and processors.
+     */
     private void createTopics() {
         TopicsManager topicsManager = TopicsManager.getInstance();
         List<String> topics = Parser.parseTopics();
