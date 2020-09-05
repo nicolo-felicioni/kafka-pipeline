@@ -47,5 +47,5 @@ fi
 export DOCKER_HOST_IP=$(ifconfig | awk '/192.168.1./ {print $2}')
 docker-compose down
 docker-compose up -d
-#docker-compose scale kafka=$NUM_BROKER
+docker-compose scale kafka=$NUM_BROKER
 exit 0
