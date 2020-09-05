@@ -18,32 +18,6 @@ delivery semantics.
 - [Nicolò Felicioni](https://github.com/ciamir51)
 - [Luca Conterio](https://github.com/luca-conterio)
 
-## Pipeline
-In order to describe the structure of the processing pipeline a metalanguage based on `YAML` has to be used.  
-The pipeline structure can be defined in `src/main/resources/pipeline.yaml` file.  
-  
-The `pipeline.yaml` file is a list of processors objects that contains the following fields:
-  - `id`: the processor's identifier.
-  - `type`: the type of the processor, that can be `forward`, `sum`, `count` or `average` (**TODO**).
-  - `to`: the list of processors the current one is connected to (i.e. each processor will send results to the processors contained in this list).
-  
-The processor that has no incoming arc, will directly be connected to the pipeline source.  
-The `sink` keyword is used to indentify the last processor of the pipeline.  
-  
-Another configuration file is the `config.yaml` that can be found at `src/main/resources` as well. It defines some configuration variables for the system, such as the broker's ip address and port, the number of task managers to be used and the parallelism. In particular this last value indicates the number of replicas the pipeline has (i.e. if parallelism is equal to `n`, then each processor is replicated `n` times).  
-In `config.yaml` it is also possible to change the name of the topics that are used as input and output for the pipeline (namely, `source_topic` and `sink_topic`).
-
-### Processors
-The available processors types are:
-  - `forward`: stateless processor that simply forwards the incoming messages to the processors it is connected to.
-  - `sum`: stateless processor that adds a constant number to the value contained in the messages it receives.
-  - `count`: stateful processor that counts the occurrenciens of messages with the same key.
-  - `average`: stateful processor that computes the average value received in a given time window. **TODO**
-  
-### Topics
-Kafka topics are used to model the arcs of the pipeline graph. In particular the name of each topic is composed by the concatenation of the two extreme processors. For example the arc that goes from processors `p1` and `p2` will be a topic having name `p1_p2`.  
-Since data can flow in a single direction in the pipeline, these topics are used as unidirectional communication media: processor `p1` produces messages on topic `p1_p2`, while processor `p2` consumes messages from that same topic.
-
 ### Example
 ```yaml
 # SOURCE PROCESSOR
@@ -83,6 +57,35 @@ The main components are:
   <img height="400" src="images/acrhitecture.png">
 </p>
 
+## Pipeline
+In order to describe the structure of the processing pipeline a metalanguage based on `YAML` has to be used.  
+The pipeline structure can be defined in `src/main/resources/pipeline.yaml` file.  
+  
+The `pipeline.yaml` file is a list of processors objects that contains the following fields:
+  - `id`: the processor's identifier.
+  - `type`: the type of the processor, that can be `forward`, `sum`, `count` or `average` (**TODO**).
+  - `to`: the list of processors the current one is connected to (i.e. each processor will send results to the processors contained in this list).
+  
+The processor that has no incoming arc, will directly be connected to the pipeline source.  
+The `sink` keyword is used to indentify the last processor of the pipeline.  
+  
+Another configuration file is the `config.yaml` that can be found at `src/main/resources` as well. It defines some configuration variables for the system, such as the broker's ip address and port, the number of task managers to be used and the parallelism. In particular this last value indicates the number of replicas the pipeline has (i.e. if parallelism is equal to `n`, then each processor is replicated `n` times).  
+In `config.yaml` it is also possible to change the name of the topics that are used as input and output for the pipeline (namely, `source_topic` and `sink_topic`).
+
+### Processors
+The available processors types are:
+  - `forward`: stateless processor that simply forwards the incoming messages to the processors it is connected to.
+  - `sum`: stateless processor that adds a constant number to the value contained in the messages it receives.
+  - `count`: stateful processor that counts the occurrenciens of messages with the same key.  
+  
+**TODO** : something about processing and state 
+  
+### Topics
+Kafka topics are used to model the arcs of the pipeline graph. In particular the name of each topic is composed by the concatenation of the two extreme processors. For example the arc that goes from processors `p1` and `p2` will be a topic having name `p1_p2`.  
+Since data can flow in a single direction in the pipeline, these topics are used as unidirectional communication media: processor `p1` produces messages on topic `p1_p2`, while processor `p2` consumes messages from that same topic.  
+  
+**TODO** : something more about processors parallelism and how topics partitions are assigned to consumers
+
 ## Pipeline Setup
 At startup the job manager sends a start of sentence message ("sos") to task managers, which in turn answer by sending a message that has the key equal to the task manager's identifier and the value equal to the number of task manager's available threads. Through the `LoadBalancer` the processors specified in `pipeline.yaml` are built and assigned to task managers: the job manager sends to each task manager its corresponding list of serialized processors. The coomunication takes place on a different topic for each task manager. The receiver can build its own set of processors and assign them to its threads, which in turn can start the execution.
   
@@ -95,3 +98,7 @@ Assume to have two task managers with IDs `0` and `1` and that `0` at some point
   - The job manager notices that the heartbeat of task manager `0` is not received for 3 consecutive periods and assumes it is no more active.
   - Task manager `0` processors are redistributed among the alive task managers and sent to them, which in turn are always listening for messages coming from the job manager.
   - When receiveing “new“ processors, task manager `1` instantiates and distributes them in a round-robin fashion to its threads, which continue with the execution considering also the newly added processors.
+
+## Assumptions
+- Required task managers are started before the job manager.
+- Task managers' IDs are assigned incrementally from `0` to `taskManagersNumber-1`.
