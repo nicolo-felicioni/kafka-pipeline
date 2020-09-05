@@ -18,33 +18,6 @@ delivery semantics.
 - [Nicolò Felicioni](https://github.com/ciamir51)
 - [Luca Conterio](https://github.com/luca-conterio)
 
-### Example
-```yaml
-# SOURCE PROCESSOR
-- id: "source_id"
-  type: "forward"
-  to: ["nodo_1", "nodo_2"]
-
-# INTERMEDIATE PROCESSORS
-- id: "nodo_1"
-  type: "sum"
-  to: ["sink_id"]
-
-- id: "nodo_2"
-  type: "count"
-  to: ["sink_id"]
-
-# SINK NODE
-- id: "sink_id"
-  type: "forward"
-  to: ["sink"]
-```
-
-The example above gives as a result the following pipeline:
-<p align="center">
-  <img height="200" src="images/pipeline_example.png">
-</p>
-
 ## Architecture
 The main components are:
   - `JobManager`: it acts as a sort of orhcestrator, assigning processors to task managers. It also has a thread called `HeartbeatController` which receives heartbeats from task managers and notifies the job manager whenever one of them crashes. The `LoadBalancer` is used to assign processors to task managers by considering also the number of their available threads and to re-assign processors in the case that some task manager becomes inactive.
@@ -71,6 +44,33 @@ The `sink` keyword is used to indentify the last processor of the pipeline.
   
 Another configuration file is the `config.yaml` that can be found at `src/main/resources` as well. It defines some configuration variables for the system, such as the broker's ip address and port, the number of task managers to be used and the parallelism. In particular this last value indicates the number of replicas the pipeline has (i.e. if parallelism is equal to `n`, then each processor is replicated `n` times).  
 In `config.yaml` it is also possible to change the name of the topics that are used as input and output for the pipeline (namely, `source_topic` and `sink_topic`).
+
+### Example
+```yaml
+# SOURCE PROCESSOR
+- id: "source_id"
+  type: "forward"
+  to: ["nodo_1", "nodo_2"]
+
+# INTERMEDIATE PROCESSORS
+- id: "nodo_1"
+  type: "sum"
+  to: ["sink_id"]
+
+- id: "nodo_2"
+  type: "count"
+  to: ["sink_id"]
+
+# SINK NODE
+- id: "sink_id"
+  type: "forward"
+  to: ["sink"]
+```
+
+The example above gives as a result the following pipeline:
+<p align="center">
+  <img height="200" src="images/pipeline_example.png">
+</p>
 
 ### Processors
 The available processors types are:
