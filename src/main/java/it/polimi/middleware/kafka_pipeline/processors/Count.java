@@ -9,31 +9,22 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-class Pair<T, V>{
-    T first;
-    V second;
-
-    public Pair(T first, V second) {
-        this.first = first;
-        this.second = second;
-    }
-}
-
 
 public class Count extends StatefulStreamProcessor{
 
     /* the state is in the form:
-    *  key ----> (count, isModified)
-    */
+     *  key ----> (count, isModified)
+     */
     private Map<String, Pair<Integer, Boolean>> state;
+
 
     public Count(StreamProcessorProperties props, Properties producerProps, Properties consumerProps) {
         super(props, producerProps, consumerProps);
-        this.state = new HashMap<>();
     }
 
     @Override
     void resumeFromState(KafkaConsumer<String, String> stateConsumer) {
+        this.state = new HashMap<>();
         ConsumerRecords<String, String> records;
         do{
             records = stateConsumer.poll(Duration.of(1, ChronoUnit.SECONDS));

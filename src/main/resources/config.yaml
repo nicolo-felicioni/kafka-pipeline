@@ -8,7 +8,7 @@
 # number of task managers to connect to
 - tm_number: 2
 # number of copies of the pipeline
-- parallelism: 2
+- parallelism: 1
 # kafka topics replication factor
 - replication_factor: 1
 
