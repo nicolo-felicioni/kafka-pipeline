@@ -33,6 +33,7 @@ public abstract class StatefulStreamProcessor extends StreamProcessor {
         KafkaConsumer<String, String> stateConsumer = new KafkaConsumer<>(stateConsumerProps);
         stateConsumer.assign(Collections.singleton(new TopicPartition(props.getStateTopic(), props.getPipelineID())));
         resumeFromState(stateConsumer);
+        stateConsumer.close();
     }
 
     abstract void resumeFromState(KafkaConsumer<String, String> stateConsumer);
