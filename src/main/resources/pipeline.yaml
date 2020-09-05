@@ -1,18 +1,7 @@
 
 # Pipeline structure and nodes description
 
-# SOURCE PROCESSOR
-- id: "source_id"
-  type: "forward"
-  to: ["nodo"]
-
 # INTERMEDIATE PROCESSORS
-
 - id: "nodo"
-  type: "count"
-  to: ["sink_id"]
-
-# SINK NODE
-- id: "sink_id"
   type: "forward"
   to: ["sink"]

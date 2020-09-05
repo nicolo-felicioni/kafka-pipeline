@@ -18,6 +18,7 @@ public class HeartbeatController extends Thread {
     private Map<Integer, Integer> heartbeats;
     private KafkaConsumer<String, String> heartbeatConsumer;
     private Boolean running;
+    private boolean firstRound = true;
 
     public HeartbeatController(int tmNumber) {
         System.out.println("JobManager : creating HeartbeatController with task managers number : " + tmNumber);
@@ -49,9 +50,7 @@ public class HeartbeatController extends Thread {
         while(running) {
 
             // update task managers counter
-            for (int k : heartbeats.keySet()) {
-                heartbeats.put(k, heartbeats.get(k)+1);
-            }
+            heartbeats.replaceAll((k, v) -> v + 1);
 
             ConsumerRecords<String, String> records = heartbeatConsumer.poll(Duration.of(2, ChronoUnit.SECONDS));
             // update heartbeat for each task manager
@@ -61,8 +60,19 @@ public class HeartbeatController extends Thread {
             }
 
             // check if task managers are alive
+            int count;
+            if (firstRound) {
+                count = 10;
+                firstRound = false;
+            }
+            else {
+                count = 5;
+            }
+
+            System.out.println("COUNT: " + count);
+
             for (int k : heartbeats.keySet()) {
-                if (heartbeats.get(k) == 5) {
+                if (heartbeats.get(k) == count) {
                     System.out.println("HeartbeatController: TaskManager " + k + " is down");
                     ProducerRecord<String, String> record =
                             new ProducerRecord<>(Config.HEARTBEAT_EVENTS_TOPIC, String.valueOf(k), "down");
