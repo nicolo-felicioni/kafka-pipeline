@@ -5,8 +5,8 @@ import it.polimi.middleware.kafka_pipeline.common.ProcessorType;
 import it.polimi.middleware.kafka_pipeline.common.Utils;
 import it.polimi.middleware.kafka_pipeline.processors.StreamProcessorProperties;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
-import java.io.IOException;
-import java.io.InputStream;
+
+import java.io.*;
 import java.util.*;
 import org.yaml.snakeyaml.Yaml;
 
@@ -26,17 +26,30 @@ public class Parser {
      */
     public static Config parseConfig() {
         Config config = new Config();
-        ArrayList<Map<String, Integer>> yaml_config = parseYaml(Config.CONFIG_FILE);
-        Config.SERVER_IP = String.valueOf(yaml_config.get(0).get("server_ip"));
-        Config.SERVER_PORT = yaml_config.get(1).get("server_port");
-        Config.JOB_NAME = String.valueOf(yaml_config.get(2).get("job_name"));
-        Config.PROCESSORS_CONSUMER_GROUP = "processors_" + Config.JOB_NAME;
-        Config.TM_NUMBER = yaml_config.get(3).get("tm_number");
-        Config.PARALLELISM = yaml_config.get(4).get("parallelism");
-        Config.NUM_TOPICS_PARTITIONS = yaml_config.get(5).get("num_topics_partitions");
-        Config.REPLICATION_FACTOR = yaml_config.get(6).get("replication_factor").shortValue();
-        Config.SOURCE_TOPIC = String.valueOf(yaml_config.get(7).get("source_topic"));
-        Config.SINK_TOPIC = String.valueOf(yaml_config.get(8).get("sink_topic"));
+
+        try {
+            FileInputStream fis = new FileInputStream(Config.CONFIG_FILE);
+
+            ArrayList<Map<String, Integer>> yaml_config = yaml.load(fis);
+            try {
+                fis.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            Config.SERVER_IP = String.valueOf(yaml_config.get(0).get("server_ip"));
+            Config.SERVER_PORT = yaml_config.get(1).get("server_port");
+            Config.JOB_NAME = String.valueOf(yaml_config.get(2).get("job_name"));
+            Config.PROCESSORS_CONSUMER_GROUP = "processors_" + Config.JOB_NAME;
+            Config.TM_NUMBER = yaml_config.get(3).get("tm_number");
+            Config.PARALLELISM = yaml_config.get(4).get("parallelism");
+            //Config.NUM_TOPICS_PARTITIONS = yaml_config.get(5).get("num_topics_partitions");
+            Config.REPLICATION_FACTOR = yaml_config.get(5).get("replication_factor").shortValue();
+            Config.SOURCE_TOPIC = String.valueOf(yaml_config.get(6).get("source_topic"));
+            Config.SINK_TOPIC = String.valueOf(yaml_config.get(7).get("sink_topic"));}
+        catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         return config;
     }
 
@@ -52,8 +65,9 @@ public class Parser {
         topics.add(Config.SOURCE_TOPIC);
         topics.add(Config.SINK_TOPIC);
 
-        try (InputStream in = (Parser.class).getClassLoader().getResourceAsStream(Config.PIPELINE_FILE)) {
-            Iterable<Object> itr = yaml.loadAll(in);
+        try {
+            FileInputStream fis = new FileInputStream(Config.PIPELINE_FILE);
+            Iterable<Object> itr = yaml.loadAll(fis);
             for (Object o : itr) {
                 List<LinkedHashMap> list = (ArrayList<LinkedHashMap>) o;
                 for (LinkedHashMap hm : list) {
@@ -119,8 +133,9 @@ public class Parser {
         Map<String, StreamProcessorProperties> propertiesMap = new HashMap<>();
         StreamProcessorProperties properties;
 
-        try (InputStream in = (Parser.class).getClassLoader().getResourceAsStream(Config.PIPELINE_FILE)) {
-            Iterable<Object> itr = yaml.loadAll(in);
+        try {
+            FileInputStream fis = new FileInputStream(Config.PIPELINE_FILE);
+            Iterable<Object> itr = yaml.loadAll(fis);
             for (Object o : itr) {
                 //System.out.println("Loaded object type: " + o.getClass());
                 List<LinkedHashMap> list = (ArrayList<LinkedHashMap>) o;

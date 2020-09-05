@@ -1,7 +1,12 @@
 package it.polimi.middleware.kafka_pipeline.processors;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
 /**
  * Basic StreamProcessor.
@@ -16,9 +21,13 @@ public class Forwarder extends StatelessStreamProcessor {
 	}
 
 	@Override
-	public ConsumerRecords<String, String> executeOperation(ConsumerRecords<String, String> records) {
+	public List<ProducerRecord<String, String>> executeOperation(ConsumerRecords<String, String> records) {
 		//simple forward
-		return records;
+		List<ProducerRecord<String,String>> results = new ArrayList<>();
+		for (ConsumerRecord<String,String> record : records)
+			results.add(new ProducerRecord<>(record.topic(), record.key(),record.value()));
+
+		return results;
 	}
 
 	@Override

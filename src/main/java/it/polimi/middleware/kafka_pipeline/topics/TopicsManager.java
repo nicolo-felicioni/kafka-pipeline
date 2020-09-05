@@ -83,7 +83,7 @@ public class TopicsManager {
 
     /**
      * Create topics starting from a list of strings.
-     * @param newTopics         the list of topics to be created
+     * @param newTopics the list of topics to be created
      */
     public void createTopics(List<String> newTopics) {
         List<String> createdTopics = new ArrayList<>();
@@ -91,7 +91,7 @@ public class TopicsManager {
             try {
                 if (!createdTopics.contains(topic)) {
                     CreateTopicsResult result = admin.createTopics(Collections.singletonList(
-                            new NewTopic(topic, Config.NUM_TOPICS_PARTITIONS, Config.REPLICATION_FACTOR))
+                            new NewTopic(topic, Config.PARALLELISM, Config.REPLICATION_FACTOR))
                     );
                     System.out.println("TopicsManager: created topic " + topic);
                     createdTopics.add(topic);
