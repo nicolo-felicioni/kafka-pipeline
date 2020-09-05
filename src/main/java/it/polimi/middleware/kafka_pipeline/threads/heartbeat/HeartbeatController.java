@@ -69,7 +69,7 @@ public class HeartbeatController extends Thread {
                 count = 5;
             }
 
-            System.out.println("COUNT: " + count);
+            //System.out.println("COUNT: " + count);
 
             for (int k : heartbeats.keySet()) {
                 if (heartbeats.get(k) == count) {

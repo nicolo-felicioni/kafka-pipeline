@@ -2,22 +2,23 @@ package it.polimi.middleware.kafka_pipeline;
 
 import it.polimi.middleware.kafka_pipeline.common.Config;
 import it.polimi.middleware.kafka_pipeline.parser.Parser;
-import it.polimi.middleware.kafka_pipeline.threads.JobManager;
+import it.polimi.middleware.kafka_pipeline.threads.TaskManager;
 import it.polimi.middleware.kafka_pipeline.topics.TopicsManager;
+import java.util.Collections;
 
-import java.util.*;
-
-public class MainJobManager {
+public class MainTaskManager {
 
     public static void main(String[] args) {
 
-        if (args.length != 2) {
-            System.out.println("Usage: java -jar <path_to_jar> <config_file_path> <pipeline_file_path>");
+        if (args.length != 4) {
+            System.out.println("Usage: java -jar <path_to_jar> <id> <threads_num> <config_file_path> <pipeline_file_path>");
             System.exit(-1);
         }
 
-        String config_path = args[0];
-        String pipeline_path = args[1];
+        int id = Integer.parseInt(args[0]);
+        int threads_num = Integer.parseInt(args[1]);
+        String config_path = args[2];
+        String pipeline_path = args[3];
 
         Config.CONFIG_FILE = config_path;
         Config.PIPELINE_FILE = pipeline_path;
@@ -25,8 +26,10 @@ public class MainJobManager {
         // Parse global configurations
         new Parser();
         Parser.parseConfig();
+
         Config.printConfiguration();
 
-        new JobManager().start();
+        new TaskManager(id, threads_num).start();
+
     }
 }

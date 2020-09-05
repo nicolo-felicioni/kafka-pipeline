@@ -2,8 +2,8 @@ package it.polimi.middleware.kafka_pipeline.common;
 
 public class Config {
 
-    public static final String CONFIG_FILE = "config.yaml";
-    public static final String PIPELINE_FILE = "pipeline.yaml";
+    public static String CONFIG_FILE;
+    public static String PIPELINE_FILE;
 
     public static String SERVER_IP;
     public static int SERVER_PORT;

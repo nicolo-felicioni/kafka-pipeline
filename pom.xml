@@ -47,7 +47,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>lib/</classpathPrefix>
-							<mainClass>it.polimi.middleware.kafka_pipeline.MainTaskManager0</mainClass>
+							<mainClass>it.polimi.middleware.kafka_pipeline.MainJobManager</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
