@@ -1,7 +1,10 @@
 
 # Pipeline structure and nodes description
 
-# INTERMEDIATE PROCESSORS
-- id: "nodo"
+- id: "P0"
   type: "forward"
+  to: ["P1"]
+
+- id: "P1"
+  type: "count"
   to: ["sink"]

@@ -24,6 +24,12 @@ public class Producer {
 
     public static void main(String[] args) {
 
+        if (args.length != 1) {
+            System.out.println("Usage: java -jar <path_to_jar> <path_to_config>");
+        }
+
+        Config.CONFIG_FILE = args[0];
+
         // Parse global configurations
         new Parser();
         Parser.parseConfig();

@@ -29,13 +29,6 @@ public class HeartbeatController extends Thread {
             heartbeats.put(i, 0);
         }
 
-        /*Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                System.out.println("Caught " + e);
-            }
-        });*/
-
         heartbeatConsumer = new KafkaConsumer<>(Utils.getConsumerProperties());
         heartbeatConsumer.assign(Collections.singleton(new TopicPartition(Config.HEARTBEAT_TOPIC, 0)));
     }
@@ -56,7 +49,7 @@ public class HeartbeatController extends Thread {
             // update heartbeat for each task manager
             for (ConsumerRecord<String, String> record : records) {
                 heartbeats.put(Integer.parseInt(record.key()), 0);
-                System.out.println("HeartbeatController: received heartbeat from TaskManager " + record.key());
+                //System.out.println("HeartbeatController: received heartbeat from TaskManager " + record.key());
             }
 
             // check if task managers are alive
@@ -68,8 +61,6 @@ public class HeartbeatController extends Thread {
             else {
                 count = 5;
             }
-
-            //System.out.println("COUNT: " + count);
 
             for (int k : heartbeats.keySet()) {
                 if (heartbeats.get(k) == count) {

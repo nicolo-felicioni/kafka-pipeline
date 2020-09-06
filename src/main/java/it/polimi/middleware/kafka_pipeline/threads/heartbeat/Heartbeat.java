@@ -22,12 +22,6 @@ public class Heartbeat extends Thread {
         System.out.println("Starting heartbeat thread");
         running = true;
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         ProducerRecord<String, String> pingRecord =
                 new ProducerRecord<>(Config.HEARTBEAT_TOPIC,
                         String.valueOf(this.taskManagerID), "ping");

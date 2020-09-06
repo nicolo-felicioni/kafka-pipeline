@@ -31,7 +31,6 @@ public abstract class StreamProcessor {
         this.props = props;
 
         this.producerProps = producerProps;
-        // TODO : temporary solution for transactional_id
         final String transactional_id = props.getID() + "_" + props.getPipelineID();
         this.producerProps.put("transactional.id", transactional_id);
         this.producerProps.put("group.id", Config.PROCESSORS_CONSUMER_GROUP); // same group for all the processors
@@ -42,7 +41,6 @@ public abstract class StreamProcessor {
         this.consumerProps.put("group.id", Config.PROCESSORS_CONSUMER_GROUP); // same group for all the processors
 
         this.consumer = new KafkaConsumer<>(consumerProps);
-        // Todo statically assign to partitions (maybe)
         //this.consumer.subscribe(props.getInTopics());
         List<TopicPartition> topicPartitions = new ArrayList<>();
         for (String topicName : props.getInTopics()) {
@@ -118,6 +116,12 @@ public abstract class StreamProcessor {
         //receive the inputs
         ConsumerRecords<String, String> records = receive();
 
+        for (final ConsumerRecord<String, String> r : records) {
+            System.out.println("ID: " + this.getId() + " " + props.getPipelineID() +
+                    " - Consumed from topic:" + r.topic() + " - key:" + r.key() +
+                    " - value:" + r.value());
+        }
+
         //get the results from the operation
         results = executeOperation(records);
 
@@ -126,10 +130,6 @@ public abstract class StreamProcessor {
         //      write it in the outTopic
         //      save it in the stateTopic
         for (final ProducerRecord<String, String> result_record : results) {
-            System.out.println("ID: " + this.getId() + " " + props.getPipelineID() +
-                    " - Consumed from topic:" + result_record.topic() + " - key:" + result_record.key() +
-                    " - value:" + result_record.value());
-
             send(result_record.key(), result_record.value());
         }
 

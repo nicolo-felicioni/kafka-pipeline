@@ -1,6 +1,6 @@
 
 - server_ip: "localhost"
-- server_port: 32773
+- server_port: 9092
 
 # JOB MANAGER PARAMETERS
 - job_name: "job_1"
@@ -10,7 +10,7 @@
 # number of copies of the pipeline
 - parallelism: 2
 # kafka topics replication factor
-- replication_factor: 1
+- replication_factor: 2
 
 # input/output topics configuration
 - source_topic: "source_topic"

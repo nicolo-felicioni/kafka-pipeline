@@ -85,8 +85,8 @@ public class JobManager {
                                 this.tmNumber,
                                 this.tmProcessors);
 
-                        System.out.println("New processors assignment: " + this.tmProcessors);
-                        System.out.println("Processors to be sent to other TaskManagers: " + toBeSentProcessors);
+                        //System.out.println("New processors assignment: " + this.tmProcessors);
+                        //System.out.println("Processors to be sent to other TaskManagers: " + toBeSentProcessors);
 
                         this.sendSerializedPipelines(toBeSentProcessors);
                     }

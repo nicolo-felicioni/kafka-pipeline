@@ -10,18 +10,16 @@ public class MainTaskManager {
 
     public static void main(String[] args) {
 
-        if (args.length != 4) {
-            System.out.println("Usage: java -jar <path_to_jar> <id> <threads_num> <config_file_path> <pipeline_file_path>");
+        if (args.length != 3) {
+            System.out.println("Usage: java -jar <path_to_jar> <id> <threads_num> <config_file_path>");
             System.exit(-1);
         }
 
         int id = Integer.parseInt(args[0]);
         int threads_num = Integer.parseInt(args[1]);
         String config_path = args[2];
-        String pipeline_path = args[3];
 
         Config.CONFIG_FILE = config_path;
-        Config.PIPELINE_FILE = pipeline_path;
 
         // Parse global configurations
         new Parser();

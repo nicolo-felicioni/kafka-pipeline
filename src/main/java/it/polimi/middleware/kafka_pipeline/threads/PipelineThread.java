@@ -32,7 +32,7 @@ public class PipelineThread extends Thread {
         while(running) {
             synchronized (lock) {
                 for (StreamProcessor p : processors) {
-                    System.out.println("Thread " + id + " - Running processor " + p.getId() + " " + p.getPipelineId());
+                    //System.out.println("Thread " + id + " - Running processor " + p.getId() + " " + p.getPipelineId());
                     p.process();
                 }
             }

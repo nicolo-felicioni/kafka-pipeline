@@ -1,0 +1,15 @@
+
+# Pipeline structure and nodes description
+
+# INTERMEDIATE PROCESSORS
+- id: "Forwarder"
+  type: "forward"
+  to: ["Adder"]
+
+- id: "Adder"
+  type: "sum"
+  to: ["Counter"]
+
+- id: "Counter"
+  type: "count"
+  to: ["sink"]
