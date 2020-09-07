@@ -47,12 +47,13 @@ public class TopicsManager {
     }
 
     private static String getTopicName(String from, String to) {
-        return from + "_" + to;
+        return from + "_" + to
+                + "_" + Config.JOB_NAME;
     }
 
     public static String getInputTopic(String id, String from) {
         if(from.equals(Config.SOURCE_KEYWORD))
-            return source_topic;
+            return source_topic + "_" + Config.JOB_NAME;
         else
             return getTopicName(from, id);
     }
@@ -63,7 +64,7 @@ public class TopicsManager {
 
     public static String getOutputTopic(String id, String to) {
         if(to.equals(Config.SINK_KEYWORD))
-            return sink_topic;
+            return sink_topic + "_" + Config.JOB_NAME;
         else
             return TopicsManager.getTopicName(id, to);
     }

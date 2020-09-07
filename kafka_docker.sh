@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NUM_BROKER=1
+NUM_BROKER=2
 FORCE=1
 
 for arg in "$@"

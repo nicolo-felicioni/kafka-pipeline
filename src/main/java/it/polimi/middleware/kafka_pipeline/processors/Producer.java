@@ -35,7 +35,7 @@ public class Producer {
         Parser.parseConfig();
         Config.printConfiguration();
 
-        final List<String> topics = Collections.singletonList(Config.SOURCE_TOPIC);
+        final List<String> topics = Collections.singletonList(Config.SOURCE_TOPIC + "_" + Config.JOB_NAME);
         final int numMessages = 100000;
 
         final Properties props = new Properties();
@@ -51,7 +51,7 @@ public class Producer {
 
         for (int i = 0; i < numMessages; i++) {
             final String topic = topics.get(r.nextInt(topics.size()));
-            final String key = String.valueOf(r.nextInt(5));
+            final String key = String.valueOf(r.nextInt(100));
             final String value = String.valueOf(i);
             if (print) {
                 System.out.println("Topic: " + topic + "\t" + //

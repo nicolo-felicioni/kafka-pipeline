@@ -37,7 +37,7 @@ public class Config {
         System.out.println("Job name: " + Config.JOB_NAME);
         System.out.println("Processors consumer group: " + Config.PROCESSORS_CONSUMER_GROUP);
         //System.out.println("Replication factor: " + Config.REPLICATION_FACTOR);
-        System.out.println("Num topics partitions: " + Config.NUM_TOPICS_PARTITIONS);
+        //System.out.println("Num topics partitions: " + Config.NUM_TOPICS_PARTITIONS);
         System.out.println("Source topic: " + Config.SOURCE_TOPIC);
         System.out.println("Sink topic: " + Config.SINK_TOPIC);
         System.out.println("--------------------------------\n");

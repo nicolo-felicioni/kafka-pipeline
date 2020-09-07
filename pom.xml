@@ -30,7 +30,7 @@
 						<configuration>
 							<archive>
 								<manifest>
-									<mainClass>it.polimi.middleware.kafka_pipeline.processors.MainJobManager</mainClass>
+									<mainClass>it.polimi.middleware.kafka_pipeline.MainJobManager</mainClass>
 								</manifest>
 							</archive>
 							<descriptorRefs>

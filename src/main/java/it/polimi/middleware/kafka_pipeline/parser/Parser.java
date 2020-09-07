@@ -62,8 +62,8 @@ public class Parser {
 
         ArrayList<String> topics = new ArrayList<>();
 
-        topics.add(Config.SOURCE_TOPIC);
-        topics.add(Config.SINK_TOPIC);
+        topics.add(Config.SOURCE_TOPIC + "_" + Config.JOB_NAME);
+        topics.add(Config.SINK_TOPIC + "_" + Config.JOB_NAME);
 
         try {
             FileInputStream fis = new FileInputStream(Config.PIPELINE_FILE);

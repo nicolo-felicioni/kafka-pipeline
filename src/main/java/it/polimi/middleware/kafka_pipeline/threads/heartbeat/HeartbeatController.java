@@ -53,14 +53,8 @@ public class HeartbeatController extends Thread {
             }
 
             // check if task managers are alive
-            int count;
-            if (firstRound) {
-                count = 10;
-                firstRound = false;
-            }
-            else {
-                count = 5;
-            }
+            int count = 15;
+
 
             for (int k : heartbeats.keySet()) {
                 if (heartbeats.get(k) == count) {
