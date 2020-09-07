@@ -104,7 +104,7 @@ When created on another task manager, stateful processor consume their own state
 - Task managers' IDs are assigned incrementally from `0` to `taskManagersNumber-1`.
 
 ## How to run
-- First of all you need to have Kafka up and running. In order to start a local Kafka cluster, launch the Docker daemon and then the `kafka-docker.sh` script, setting the variable `NUM_BROKER` in the third line to the required number of Kafka brokers. It will create the Kafka instances in docker.
+- First of all you need to have Kafka up and running. Set your own IP address in the `docker-compose.yaml` file. In order to start a local Kafka cluster, launch the Docker daemon and then the `kafka-docker.sh` script, setting the variable `NUM_BROKER` in the third line to the required number of Kafka brokers. It will create the Kafka instances in docker.
 - Modify the configuration files: 
   - in `config.yaml` set the IP address and port of the broker. Moreover you can change the other parameters for the pipeline.
   - in `pipeline.yaml` provide the structure of the pipeline.
