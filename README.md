@@ -15,7 +15,7 @@ delivery semantics.
 
 ## Team Members
 - [Mattia Righetti](https://github.com/MattRighetti)
-- [Nicolò Felicioni](https://github.com/ciamir51)
+- [Nicolò Felicioni](https://github.com/nicolo-felicioni)
 - [Luca Conterio](https://github.com/luca-conterio)
 
 ## Architecture
